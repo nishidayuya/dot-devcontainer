@@ -1,16 +1,47 @@
-FROM mcr.microsoft.com/devcontainers/ruby:4.0-trixie
+FROM mcr.microsoft.com/devcontainers/base:debian-13
 
-# Node.js のインストール (Gemini CLI のために必要)
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y nodejs
-
-# Gemini CLI のインストール
-RUN npm install -g @google/gemini-cli
-
-# Chromium と依存パッケージのインストール
+# Install git, gh, Chromium, and other dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
-        chromium \
-        curl \
-        gnupg \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git \
+    gh \
+    iptables \
+    curl \
+    ca-certificates \
+    gpg \
+    gnupg \
+    build-essential \
+    libssl-dev \
+    libyaml-dev \
+    libreadline6-dev \
+    zlib1g-dev \
+    libncurses5-dev \
+    libffi-dev \
+    libgdbm6 \
+    libgdbm-dev \
+    dbus \
+    kmod \
+    chromium \
+    chromium-driver \
+    wget
+
+# Install mise
+RUN install -dm 755 /etc/apt/keyrings \
+    && wget -qO - https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=amd64] https://mise.jdx.dev/deb stable main" | tee /etc/apt/sources.list.d/mise.list \
+    && apt-get update \
+    && apt-get install -y mise
+
+USER vscode
+ENV MISE_DATA_DIR=/home/vscode/.local/share/mise
+ENV MISE_CONFIG_DIR=/home/vscode/.config/mise
+ENV PATH="/home/vscode/.local/share/mise/shims:${PATH}"
+
+# Install Ruby, Node, and Gemini CLI using mise
+RUN mise use -g ruby@latest \
+    && mise use -g node@24 \
+    && npm install -g @google/gemini-cli
+
+# Setup shell for mise
+RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
+    && echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
