@@ -2,7 +2,7 @@
 
 set -eu
 
-REF="${DOT_DEVCONTAINER_REF:-master}"
+REF="${DOT_DEVCONTAINER_REF:-main}"
 TARBALL_URL="https://github.com/nishidayuya/dot-devcontainer/archive/${REF}.tar.gz"
 
 echo "Installing .devcontainer files from ${REF}..."
