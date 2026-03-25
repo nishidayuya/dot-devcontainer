@@ -2,24 +2,7 @@
 set -e
 
 # List of domains to allow
-DOMAINS=(
-  "github.com"
-  "api.github.com"
-  "objects.githubusercontent.com"
-  "registry.npmjs.org"
-  "rubygems.org"
-  "index.rubygems.org"
-  "generativelanguage.googleapis.com"
-  "deb.debian.org"
-  "security.debian.org"
-  "index.docker.io"
-  "registry-1.docker.io"
-  "auth.docker.io"
-  "production.cloudflare.docker.com"
-  "dl.google.com" # Common for Google tools
-  "mise.jdx.dev"
-  "download.docker.com"
-)
+DOMAINS=($(run-parts .devcontainer/allow_hosts.d/))
 
 # Flush existing rules
 iptables -F

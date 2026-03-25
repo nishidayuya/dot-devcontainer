@@ -1,0 +1,6 @@
+#!/bin/bash
+cat <<EOF
+github.com
+api.github.com
+objects.githubusercontent.com
+EOF

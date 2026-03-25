@@ -1,0 +1,5 @@
+#!/bin/bash
+cat <<EOF
+generativelanguage.googleapis.com
+dl.google.com
+EOF
