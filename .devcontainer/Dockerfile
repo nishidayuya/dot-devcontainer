@@ -38,9 +38,9 @@ ENV MISE_CONFIG_DIR=/home/vscode/.config/mise
 ENV PATH="/home/vscode/.local/share/mise/shims:${PATH}"
 
 # Install Ruby, Node, and Gemini CLI using mise
-RUN mise use -g ruby@latest \
-    && mise use -g node@24 \
-    && npm install -g @google/gemini-cli
+RUN mise use -g node@24
+RUN npm install -g @google/gemini-cli
+RUN mise use -g ruby@latest
 
 # Setup shell for mise
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
