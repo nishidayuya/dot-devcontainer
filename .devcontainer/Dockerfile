@@ -37,8 +37,9 @@ ENV MISE_DATA_DIR=/home/vscode/.local/share/mise
 ENV MISE_CONFIG_DIR=/home/vscode/.config/mise
 ENV PATH="/home/vscode/.local/share/mise/shims:${PATH}"
 
-# Install Ruby, Node, and Gemini CLI using mise
+# Install tools
 RUN mise use -g node@24
+RUN npm install -g @devcontainers/cli
 RUN npm install -g @google/gemini-cli
 RUN mise use -g ruby@latest
 
