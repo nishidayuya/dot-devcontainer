@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -eu
 
 REF="${DOT_DEVCONTAINER_REF:-main}"

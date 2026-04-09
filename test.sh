@@ -1,6 +1,5 @@
 #!/bin/sh
-
-set -eux
+set -eu
 
 devcontainer --version
 gemini --version
