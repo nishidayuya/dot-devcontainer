@@ -1,5 +1,8 @@
 #!/bin/bash
 cat <<EOF
 generativelanguage.googleapis.com
+cloudcode-pa.googleapis.com
+oauth2.googleapis.com
+accounts.google.com
 dl.google.com
 EOF

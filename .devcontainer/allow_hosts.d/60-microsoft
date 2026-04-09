@@ -1,0 +1,6 @@
+#!/bin/bash
+cat <<EOF
+mcr.microsoft.com
+ghcr.io
+pkg-containers.githubusercontent.com
+EOF
