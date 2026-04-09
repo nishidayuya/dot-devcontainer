@@ -20,17 +20,23 @@ iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT -p udp --dport 53 -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 53 -j ACCEPT
 
-# Allow HTTP/HTTPS for specific domains
-for domain in "${DOMAINS[@]}"; do
-  # Get all IP addresses for the domain (IPv4)
-  IPS=$(getent ahosts "$domain" | awk '{print $1}' | sort -u | grep -E '^[0-9.]+$')
-  for ip in $IPS; do
-    iptables -A OUTPUT -p tcp -d "$ip" --dport 80 -j ACCEPT
-    iptables -A OUTPUT -p tcp -d "$ip" --dport 443 -j ACCEPT
-    if [[ "$domain" == "github.com" ]]; then
-      iptables -A OUTPUT -p tcp -d "$ip" --dport 22 -j ACCEPT
-    fi
-  done
+# Allow HTTP/HTTPS for specific domains and CIDR ranges
+for entry in "${DOMAINS[@]}"; do
+  if [[ "$entry" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(/[0-9]{1,2})?$ ]]; then
+    # Direct CIDR or IP
+    iptables -A OUTPUT -p tcp -d "$entry" --dport 80 -j ACCEPT
+    iptables -A OUTPUT -p tcp -d "$entry" --dport 443 -j ACCEPT
+  else
+    # Domain name
+    IPS=$(getent ahosts "$entry" | awk '{print $1}' | sort -u | grep -E '^[0-9.]+$')
+    for ip in $IPS; do
+      iptables -A OUTPUT -p tcp -d "$ip" --dport 80 -j ACCEPT
+      iptables -A OUTPUT -p tcp -d "$ip" --dport 443 -j ACCEPT
+      if [[ "$entry" == "github.com" ]]; then
+        iptables -A OUTPUT -p tcp -d "$ip" --dport 22 -j ACCEPT
+      fi
+    done
+  fi
 done
 
 # Default policy: DROP all other output

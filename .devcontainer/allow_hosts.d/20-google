@@ -1,8 +1,2 @@
 #!/bin/bash
-cat <<EOF
-generativelanguage.googleapis.com
-cloudcode-pa.googleapis.com
-oauth2.googleapis.com
-accounts.google.com
-dl.google.com
-EOF
+curl -s https://www.gstatic.com/ipranges/goog.json | jq -r '.prefixes[] | select(.ipv4Prefix != null) | .ipv4Prefix'
