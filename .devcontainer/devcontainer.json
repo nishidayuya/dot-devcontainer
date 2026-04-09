@@ -22,7 +22,6 @@
     "vscode": {
       "extensions": [
         "ms-vscode-remote.remote-containers",
-        "shopify.ruby-lsp",
         "dbaeumer.vscode-eslint"
       ]
     }
