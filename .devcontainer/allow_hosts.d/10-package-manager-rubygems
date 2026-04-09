@@ -1,0 +1,5 @@
+#!/bin/bash
+cat <<EOF
+rubygems.org
+index.rubygems.org
+EOF

@@ -1,6 +1,4 @@
 #!/bin/bash
 cat <<EOF
 registry.npmjs.org
-rubygems.org
-index.rubygems.org
 EOF
