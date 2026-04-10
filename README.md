@@ -27,7 +27,7 @@ A Dev Container configuration template pre-installed with `mise` and `Gemini CLI
 Run the following command in your project root to install the `.devcontainer` directory:
 
 ```bash
-curl -f -sL https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/install.sh | bash
+curl -f -sL https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/install.sh | sh
 ```
 
 ### Starting the Dev Container
@@ -50,7 +50,7 @@ api.example.com
 
 To apply changes inside the container, run:
 ```bash
-sudo bash .devcontainer/setup-firewall.sh
+sudo sh .devcontainer/setup-firewall.sh
 ```
 
 ## Prerequisites
