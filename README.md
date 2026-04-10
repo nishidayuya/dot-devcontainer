@@ -26,8 +26,14 @@ A Dev Container configuration template pre-installed with `mise` and `Gemini CLI
 
 Run the following command in your project root to install the `.devcontainer` directory:
 
-```bash
+```sh
 curl -f -sL https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/install.sh | sh
+```
+
+For [`git-cococo`](https://github.com/nishidayuya/git-cococo) junkies:
+
+```sh
+git cococo sh -eux -c "curl -sL https://github.com/nishidayuya/dot-devcontainer/raw/refs/heads/main/install.sh | DOT_DEVCONTAINER_REF=$(git ls-remote https://github.com/nishidayuya/dot-devcontainer.git refs/heads/main | awk '{print($1)}') sh"
 ```
 
 ### Starting the Dev Container
