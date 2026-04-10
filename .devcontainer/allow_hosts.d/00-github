@@ -6,6 +6,7 @@ set -eu
 cat <<EOF
 github.com
 api.github.com
+docs.github.com
 objects.githubusercontent.com
 EOF
 

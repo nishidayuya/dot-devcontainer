@@ -2,6 +2,11 @@
 
 set -eu
 
+cat <<EOF
+www.gstatic.com
+oauth2.googleapis.com
+EOF
+
 # https://knowledge.workspace.google.com/admin/security/obtain-google-ip-address-ranges
 curl -s https://www.gstatic.com/ipranges/goog.json | \
   jq -r '.prefixes[] | select(.ipv4Prefix != null) | .ipv4Prefix' | \
