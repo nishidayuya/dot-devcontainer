@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eu
+set -eux
 
 REF="${DOT_DEVCONTAINER_REF:-main}"
 TARBALL_URL="https://github.com/nishidayuya/dot-devcontainer/archive/${REF}.tar.gz"

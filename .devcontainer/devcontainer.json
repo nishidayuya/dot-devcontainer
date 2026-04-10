@@ -13,10 +13,14 @@
     "source=${localEnv:HOME}/.gemini,target=/home/vscode/.gemini,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
   ],
+  "capAdd": [
+    "NET_ADMIN"
+  ],
   "runArgs": [
     "--init"
   ],
   "overrideCommand": true,
+  "postStartCommand": "sudo bash .devcontainer/setup-firewall.sh",
   "remoteUser": "vscode",
   "customizations": {
     "vscode": {
