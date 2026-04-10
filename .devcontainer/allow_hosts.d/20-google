@@ -3,8 +3,9 @@
 set -eu
 
 cat <<EOF
-www.gstatic.com
+cloudcode-pa.googleapis.com
 oauth2.googleapis.com
+www.gstatic.com
 EOF
 
 # https://knowledge.workspace.google.com/admin/security/obtain-google-ip-address-ranges
