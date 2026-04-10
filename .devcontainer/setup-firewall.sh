@@ -1,4 +1,5 @@
 #!/bin/sh
+
 set -eu
 
 # Flush existing rules
