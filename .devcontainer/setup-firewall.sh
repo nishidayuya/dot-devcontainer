@@ -31,6 +31,17 @@ cat <<EOF > "$RULES_FILE"
 # Allow DNS (port 53 UDP/TCP)
 -A OUTPUT -p udp --dport 53 -j ACCEPT
 -A OUTPUT -p tcp --dport 53 -j ACCEPT
+
+# Allow Google Public DNS (8.8.8.8, 8.8.4.4) for 53, 443, 853
+-A OUTPUT -p udp -d 8.8.8.8 --dport 53 -j ACCEPT
+-A OUTPUT -p tcp -d 8.8.8.8 --dport 53 -j ACCEPT
+-A OUTPUT -p tcp -d 8.8.8.8 --dport 443 -j ACCEPT
+-A OUTPUT -p tcp -d 8.8.8.8 --dport 853 -j ACCEPT
+
+-A OUTPUT -p udp -d 8.8.4.4 --dport 53 -j ACCEPT
+-A OUTPUT -p tcp -d 8.8.4.4 --dport 53 -j ACCEPT
+-A OUTPUT -p tcp -d 8.8.4.4 --dport 443 -j ACCEPT
+-A OUTPUT -p tcp -d 8.8.4.4 --dport 853 -j ACCEPT
 EOF
 
 # Process all entries from allow_hosts.d
@@ -57,9 +68,12 @@ grep -vE '^[0-9.]+(\/[0-9]+)?$' "$TMP_ENTRIES" | while read -r domain; do
   done
 done
 
-# Default policy: DROP all other output
+# Reject all other output immediately
+# Use tcp-reset for TCP to get immediate Connection Refused
+# Use icmp-port-unreachable for others
 cat <<EOF >> "$RULES_FILE"
--P OUTPUT DROP
+-A OUTPUT -p tcp -j REJECT --reject-with tcp-reset
+-A OUTPUT -j REJECT --reject-with icmp-port-unreachable
 COMMIT
 EOF
 
