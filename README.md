@@ -1,5 +1,8 @@
 # dot-devcontainer
 
+[![License X11](https://img.shields.io/badge/license-X11-blue.svg)](https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/LICENSE.txt)
+[![Latest tag](https://img.shields.io/github/v/tag/nishidayuya/dot-devcontainer)](https://github.com/nishidayuya/dot-devcontainer/tags)
+
 A Dev Container configuration template pre-installed with `mise` and `Gemini CLI`, featuring network access control (allowlist approach) via firewall.
 
 ## Features
