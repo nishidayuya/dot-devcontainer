@@ -24,4 +24,7 @@ exec devcontainer exec bash -eux -c '
 
   # Check GitHub CLI authentication
   gh auth status
+
+  # Verify SSH agent forwarding (success or no identities found)
+  ssh-add -l || [ $? -eq 1 ]
 '
