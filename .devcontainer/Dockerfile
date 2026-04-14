@@ -40,6 +40,7 @@ ENV PATH="/home/vscode/.local/share/mise/shims:${PATH}"
 # Install tools
 RUN mise use -g node@24
 RUN npm install -g @devcontainers/cli
+RUN npm install -g @anthropic-ai/claude-code
 RUN npm install -g @google/gemini-cli
 RUN mise use -g ruby@latest
 
