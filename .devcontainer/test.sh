@@ -17,4 +17,7 @@ exec devcontainer exec bash -eux -c '
   devcontainer --version
   gemini --version
   gemini --prompt "Hello, World!"
+
+  # Check GitHub CLI authentication
+  gh auth status
 '

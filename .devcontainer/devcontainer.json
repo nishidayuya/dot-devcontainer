@@ -16,8 +16,11 @@
   "capAdd": [
     "NET_ADMIN"
   ],
+  "initializeCommand": "echo \"GH_TOKEN=$(gh auth token)\" > .devcontainer/.env",
   "runArgs": [
-    "--init"
+    "--init",
+    "--env-file",
+    ".devcontainer/.env"
   ],
   "overrideCommand": true,
   "postStartCommand": "sudo bash .devcontainer/setup-firewall.sh",
