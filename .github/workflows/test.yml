@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
@@ -17,6 +18,12 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+
+      - name: Switch to Linux containers
+        if: runner.os == 'Windows'
+        run: |
+          "C:\Program Files\Docker\Docker\DockerCli.exe" -SwitchLinuxEngine
+        shell: pwsh
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -54,3 +61,4 @@ jobs:
           # Set dummy keys to see if the tools at least try to connect
           GEMINI_API_KEY: "dummy"
           ANTHROPIC_API_KEY: "dummy"
+          DOCKER_DEFAULT_PLATFORM: linux/amd64
