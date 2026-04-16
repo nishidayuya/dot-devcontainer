@@ -19,11 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Switch to Linux containers
-        if: runner.os == 'Windows'
+      - name: Docker Info
         run: |
-          & "C:\Program Files\Docker\Docker\DockerCli.exe" -SwitchLinuxEngine
-        shell: pwsh
+          docker info
+          docker version
+        shell: bash
 
       - name: Install Node.js
         uses: actions/setup-node@v4
