@@ -8,7 +8,13 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +42,8 @@ jobs:
           # Ensure GH_TOKEN is set for initializeCommand
           echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
           # Mock SSH agent
+          # On Windows, we need to handle the path differently for ssh-agent if /tmp is not available
+          # However, in Git Bash /tmp usually exists.
           ssh-agent -a /tmp/ssh-agent.sock > /dev/null
           echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
 
