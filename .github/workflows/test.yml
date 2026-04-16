@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install devcontainer CLI and AI tools
+        run: |
+          npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
+
+      - name: Prepare mock files for mounts and authentication
+        run: |
+          mkdir -p ~/.claude ~/.gemini
+          # Create dummy credential files to simulate web authentication
+          echo '{"dummy": true}' > ~/.gemini/oauth_creds.json
+          echo '{"loggedIn": true, "dummy": true}' > ~/.claude/.credentials.json
+          touch ~/.claude.json
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+      - name: Prepare environment
+        run: |
+          # Ensure GH_TOKEN is set for initializeCommand
+          echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
+          # Mock SSH agent
+          ssh-agent -a /tmp/ssh-agent.sock > /dev/null
+          echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
+
+      - name: Run test.sh
+        run: .devcontainer/test.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Set dummy keys to see if the tools at least try to connect
+          GEMINI_API_KEY: "dummy"
+          ANTHROPIC_API_KEY: "dummy"

@@ -6,6 +6,7 @@ cat <<EOF
 cloudcode-pa.googleapis.com
 oauth2.googleapis.com
 www.gstatic.com
+generativelanguage.googleapis.com
 EOF
 
 # https://knowledge.workspace.google.com/admin/security/obtain-google-ip-address-ranges
