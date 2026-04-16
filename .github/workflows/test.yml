@@ -22,7 +22,7 @@ jobs:
       - name: Switch to Linux containers
         if: runner.os == 'Windows'
         run: |
-          "C:\Program Files\Docker\Docker\DockerCli.exe" -SwitchLinuxEngine
+          & "C:\Program Files\Docker\Docker\DockerCli.exe" -SwitchLinuxEngine
         shell: pwsh
 
       - name: Install Node.js
