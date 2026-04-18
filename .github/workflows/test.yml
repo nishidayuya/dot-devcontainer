@@ -48,7 +48,7 @@ jobs:
           ANTHROPIC_API_KEY: "dummy"
 
   test-macos:
-    runs-on: macos-14
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
 
@@ -62,9 +62,9 @@ jobs:
           npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
 
       - name: Install Colima and Docker CLI
-        uses: abiosoft/colima-action@v1
-        with:
-          colima-version: 'v0.10.1'
+        run: |
+          brew install colima docker
+          colima start
 
       - name: Prepare mock files for mounts and authentication
         run: |
