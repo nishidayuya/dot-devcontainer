@@ -43,6 +43,11 @@ jobs:
           touch ~/.claude.json
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
+          # On Windows, bind mounts for SSH_AUTH_SOCK and others can fail
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            mv .devcontainer/devcontainer.json .devcontainer/devcontainer.json.bak
+            jq 'del(.mounts)' .devcontainer/devcontainer.json.bak > .devcontainer/devcontainer.json
+          fi
 
       - name: Prepare environment
         run: |
