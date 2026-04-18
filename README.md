@@ -36,7 +36,7 @@ curl -f -sL https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/
 For [`git-cococo`](https://github.com/nishidayuya/git-cococo) junkies:
 
 ```sh
-git cococo sh -eux -c "curl -sL https://github.com/nishidayuya/dot-devcontainer/raw/refs/heads/main/install.sh | DOT_DEVCONTAINER_REF=$(git ls-remote https://github.com/nishidayuya/dot-devcontainer.git refs/heads/main | awk '{print($1)}') sh"
+DOT_DEVCONTAINER_REF="$(git ls-remote https://github.com/nishidayuya/dot-devcontainer.git refs/heads/main | awk '{print($1)}')" && git cococo sh -eux -c "curl -fsL https://github.com/nishidayuya/dot-devcontainer/raw/$DOT_DEVCONTAINER_REF/install.sh | DOT_DEVCONTAINER_REF=$DOT_DEVCONTAINER_REF sh"
 ```
 
 ### Starting the Dev Container
