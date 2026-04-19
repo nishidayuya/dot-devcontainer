@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:debian-13
+FROM mcr.microsoft.com/devcontainers/base:debian-12
 
 # Install git, gh, Chromium, and other dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \

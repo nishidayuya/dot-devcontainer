@@ -8,9 +8,27 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2019]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GEMINI_API_KEY: "dummy"
+      ANTHROPIC_API_KEY: "dummy"
+      DOCKER_DEFAULT_PLATFORM: linux/amd64
     steps:
       - uses: actions/checkout@v4
+
+      - name: Docker Info
+        run: |
+          docker info
+          docker version
+        shell: bash
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -36,13 +54,13 @@ jobs:
           # Ensure GH_TOKEN is set for initializeCommand
           echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
           # Mock SSH agent
-          ssh-agent -a /tmp/ssh-agent.sock > /dev/null
-          echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
+          # Use a path in the workspace for better Docker bind mount compatibility on Windows
+          SSH_SOCK_DIR="${{ github.workspace }}/.ssh"
+          mkdir -p "$SSH_SOCK_DIR"
+          ssh-agent -a "$SSH_SOCK_DIR/agent.sock" > /dev/null
+          # Convert to a path Docker on Windows can understand if necessary
+          # But for now let's try absolute path
+          echo "SSH_AUTH_SOCK=$SSH_SOCK_DIR/agent.sock" >> $GITHUB_ENV
 
       - name: Run test.sh
         run: .devcontainer/test.sh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Set dummy keys to see if the tools at least try to connect
-          GEMINI_API_KEY: "dummy"
-          ANTHROPIC_API_KEY: "dummy"

@@ -5,9 +5,13 @@ set -eux
 devcontainer --version
 gemini --version
 
+# On Windows, we might need to skip some things or handle paths
+# But for now, let's just see where it fails
 devcontainer build
 devcontainer up --workspace-folder . --remove-existing-container
-exec devcontainer exec bash -eux -c '
+
+# Remove exec here to avoid potential issues on Windows shell
+devcontainer exec bash -eux -c '
   ruby --version
   gem install rake
 
