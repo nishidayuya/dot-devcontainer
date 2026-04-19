@@ -16,6 +16,11 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GEMINI_API_KEY: "dummy"
+      ANTHROPIC_API_KEY: "dummy"
+      DOCKER_DEFAULT_PLATFORM: linux/amd64
     steps:
       - uses: actions/checkout@v4
 
@@ -43,27 +48,19 @@ jobs:
           touch ~/.claude.json
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
-          # On Windows, bind mounts for SSH_AUTH_SOCK and others can fail
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            mv .devcontainer/devcontainer.json .devcontainer/devcontainer.json.bak
-            jq 'del(.mounts)' .devcontainer/devcontainer.json.bak > .devcontainer/devcontainer.json
-          fi
 
       - name: Prepare environment
         run: |
           # Ensure GH_TOKEN is set for initializeCommand
           echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
           # Mock SSH agent
-          # On Windows, we need to handle the path differently for ssh-agent if /tmp is not available
-          # However, in Git Bash /tmp usually exists.
-          ssh-agent -a /tmp/ssh-agent.sock > /dev/null
-          echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
+          # Use a path in the workspace for better Docker bind mount compatibility on Windows
+          SSH_SOCK_DIR="${{ github.workspace }}/.ssh"
+          mkdir -p "$SSH_SOCK_DIR"
+          ssh-agent -a "$SSH_SOCK_DIR/agent.sock" > /dev/null
+          # Convert to a path Docker on Windows can understand if necessary
+          # But for now let's try absolute path
+          echo "SSH_AUTH_SOCK=$SSH_SOCK_DIR/agent.sock" >> $GITHUB_ENV
 
       - name: Run test.sh
         run: .devcontainer/test.sh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Set dummy keys to see if the tools at least try to connect
-          GEMINI_API_KEY: "dummy"
-          ANTHROPIC_API_KEY: "dummy"
-          DOCKER_DEFAULT_PLATFORM: linux/amd64
