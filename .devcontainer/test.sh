@@ -2,12 +2,22 @@
 
 set -eux
 
+echo "Diagnostic Information:"
+id
+pwd
+env | grep -E "GH_TOKEN|GITHUB_TOKEN|SSH_AUTH_SOCK" || echo "No relevant env vars found"
 devcontainer --version
 gemini --version
 
 devcontainer build
 devcontainer up --workspace-folder . --remove-existing-container
 exec devcontainer exec bash -eux -c '
+  echo "Inside Container Diagnostic Information:"
+  id
+  pwd
+  env | grep -E "GH_TOKEN|GITHUB_TOKEN|SSH_AUTH_SOCK" || echo "No relevant env vars found"
+  gh auth status
+
   ruby --version
   gem install rake
 
