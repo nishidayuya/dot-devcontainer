@@ -58,9 +58,14 @@ jobs:
           SSH_SOCK_DIR="${{ github.workspace }}/.ssh"
           mkdir -p "$SSH_SOCK_DIR"
           ssh-agent -a "$SSH_SOCK_DIR/agent.sock" > /dev/null
-          # Convert to a path Docker on Windows can understand if necessary
-          # But for now let's try absolute path
-          echo "SSH_AUTH_SOCK=$SSH_SOCK_DIR/agent.sock" >> $GITHUB_ENV
+          
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            SSH_AUTH_SOCK_FOR_DOCKER=$(cygpath -w "$SSH_SOCK_DIR/agent.sock")
+          else
+            SSH_AUTH_SOCK_FOR_DOCKER="$SSH_SOCK_DIR/agent.sock"
+          fi
+          echo "SSH_AUTH_SOCK_FOR_DOCKER=$SSH_AUTH_SOCK_FOR_DOCKER" >> $GITHUB_ENV
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK_FOR_DOCKER" >> $GITHUB_ENV
 
       - name: Run test.sh
         run: .devcontainer/test.sh
