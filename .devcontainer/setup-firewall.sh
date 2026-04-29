@@ -45,7 +45,10 @@ cat <<EOF > "$RULES_FILE"
 EOF
 
 # Process all entries from allow_hosts.d
-run-parts .devcontainer/allow_hosts.d/ > "$TMP_ENTRIES"
+# Use --lsbsysinit to be more flexible with filenames if available,
+# but stick to standard run-parts for compatibility.
+# We use || true to prevent script from exiting if one part fails.
+run-parts .devcontainer/allow_hosts.d > "$TMP_ENTRIES" || true
 
 # Use awk to handle IP/CIDR entries efficiently
 awk '
@@ -56,9 +59,10 @@ awk '
 ' "$TMP_ENTRIES" >> "$RULES_FILE"
 
 # Now handle domains
-grep -vE '^[0-9.]+(\/[0-9]+)?$' "$TMP_ENTRIES" | while read -r domain; do
+grep -vE '^[0-9.]+(\/[0-9]+)?$' "$TMP_ENTRIES" | sort -u | while read -r domain; do
   [ -z "$domain" ] && continue
-  IPS=$(getent ahosts "$domain" | awk '{print $1}' | sort -u | grep -E '^[0-9.]+$')
+  # Use a timeout for getent and ignore errors
+  IPS=$(timeout 5 getent ahosts "$domain" 2>/dev/null | awk '{print $1}' | sort -u | grep -E '^[0-9.]+$') || continue
   for ip in $IPS; do
     printf -- "-A OUTPUT -p tcp -d %s --dport 80 -j ACCEPT\n" "$ip" >> "$RULES_FILE"
     printf -- "-A OUTPUT -p tcp -d %s --dport 443 -j ACCEPT\n" "$ip" >> "$RULES_FILE"

@@ -20,6 +20,7 @@ jobs:
       - name: Install devcontainer CLI and AI tools
         run: |
           npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
+          echo "$(npm config get prefix)/bin" >> $GITHUB_PATH
 
       - name: Prepare mock files for mounts and authentication
         run: |
@@ -43,6 +44,7 @@ jobs:
         run: .devcontainer/test.sh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set dummy keys to see if the tools at least try to connect
           GEMINI_API_KEY: "dummy"
           ANTHROPIC_API_KEY: "dummy"
@@ -60,6 +62,7 @@ jobs:
       - name: Install devcontainer CLI and AI tools
         run: |
           npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
+          echo "$(npm config get prefix)/bin" >> $GITHUB_PATH
 
       - name: Setup Docker on macOS
         uses: douglascamata/setup-docker-macos-action@v1
@@ -89,6 +92,7 @@ jobs:
         run: .devcontainer/test.sh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set dummy keys to see if the tools at least try to connect
           GEMINI_API_KEY: "dummy"
           ANTHROPIC_API_KEY: "dummy"

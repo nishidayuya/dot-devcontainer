@@ -17,12 +17,13 @@
     "source=${localEnv:SSH_AUTH_SOCK},target=${localEnv:SSH_AUTH_SOCK},type=bind,consistency=cached"
   ],
   "remoteEnv": {
-    "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}"
+    "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
+    "GH_TOKEN": "${localEnv:GH_TOKEN}"
   },
   "capAdd": [
     "NET_ADMIN"
   ],
-  "initializeCommand": "echo \"GH_TOKEN=$(gh auth token)\" > .devcontainer/.env",
+  "initializeCommand": "test -f .devcontainer/.env || echo \"GH_TOKEN=$(gh auth token 2>/dev/null || echo '')\" > .devcontainer/.env",
   "runArgs": [
     "--init",
     "--env-file",
