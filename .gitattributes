@@ -1,0 +1,4 @@
+# Ensure shell scripts always use LF so they run correctly when checked out
+# on Windows (CRLF would break the #!/bin/sh shebang) or copied into WSL.
+* text=auto eol=lf
+*.sh text eol=lf

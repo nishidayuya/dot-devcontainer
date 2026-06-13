@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, add_windows_and_macos_test ]
   pull_request:
     branches: [ main ]
 
@@ -46,3 +46,125 @@ jobs:
           # Set dummy keys to see if the tools at least try to connect
           GEMINI_API_KEY: "dummy"
           ANTHROPIC_API_KEY: "dummy"
+
+  test-macos:
+    # GitHub-hosted macOS runners ship no Docker daemon, so we provide one via
+    # Colima (a Lima Linux VM). Colima needs nested virtualization, which is
+    # only available on Intel runners; Apple Silicon runners (macos-14/15,
+    # macos-latest) return HV_UNSUPPORTED and cannot run Linux containers at all.
+    # macos-15-intel is the last/only supported Intel image (available ~2027).
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker (Colima)
+        uses: douglascamata/setup-docker-macos-action@v1.1.0
+        with:
+          # Give the Linux VM room for docker-in-docker + iptables + mise/ruby/node.
+          colima-additional-options: "--cpu 3 --memory 12"
+
+      - name: Sanity check Docker
+        run: |
+          docker version
+          docker info
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install devcontainer CLI and AI tools
+        run: |
+          npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
+
+      - name: Prepare mock files for mounts and authentication
+        run: |
+          mkdir -p ~/.claude ~/.gemini
+          echo '{"dummy": true}' > ~/.gemini/oauth_creds.json
+          echo '{"loggedIn": true, "dummy": true}' > ~/.claude/.credentials.json
+          echo '{}' > ~/.claude.json
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+      - name: Prepare environment
+        run: |
+          echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
+          chmod +x .devcontainer/*.sh
+          ssh-agent -a /tmp/ssh-agent.sock > /dev/null
+          echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
+
+      - name: Run test.sh
+        run: .devcontainer/test.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: "dummy"
+          ANTHROPIC_API_KEY: "dummy"
+
+  test-windows:
+    # GitHub-hosted Windows runners cannot run Linux containers via native
+    # Docker (no nested virtualization, no WSL2 Docker backend). The only
+    # viable path is to run the whole Linux flow inside WSL2, which makes this
+    # effectively a Linux job. windows-2025 (== windows-latest) is required
+    # because only it ships WSL; windows-2022 does not.
+    runs-on: windows-2025
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up WSL2 (Ubuntu)
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: 2
+          additional-packages: curl ca-certificates iptables dbus rsync dos2unix git openssh-client
+
+      - name: Provision WSL (docker, node, devcontainer cli)
+        shell: wsl-bash {0}
+        run: |
+          set -eux
+          # Docker-in-WSL and the firewall script's iptables-restore are reliable
+          # only with the legacy iptables backend.
+          update-alternatives --set iptables /usr/sbin/iptables-legacy || true
+          # Install Docker Engine (native, NOT Docker Desktop).
+          curl -fsSL https://get.docker.com | sh
+          # No systemd in the WSL distro, so start dockerd manually and wait.
+          nohup dockerd > /tmp/dockerd.log 2>&1 &
+          for i in $(seq 1 30); do docker info > /dev/null 2>&1 && break; sleep 2; done
+          docker info
+          # Install Node.js 24 and the CLI tools inside WSL.
+          curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+          apt-get install -y nodejs
+          npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
+
+      - name: Prepare mock files for mounts and authentication
+        shell: wsl-bash {0}
+        run: |
+          set -eux
+          mkdir -p "$HOME/.claude" "$HOME/.gemini"
+          echo '{"dummy": true}' > "$HOME/.gemini/oauth_creds.json"
+          echo '{"loggedIn": true, "dummy": true}' > "$HOME/.claude/.credentials.json"
+          echo '{}' > "$HOME/.claude.json"
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+      - name: Run test.sh (inside WSL, native filesystem)
+        shell: wsl-bash {0}
+        run: |
+          set -eux
+          # The checkout lives on the Windows filesystem; copy it into the native
+          # WSL filesystem to avoid CRLF / permission / performance problems.
+          SRC="/mnt/$(echo '${{ github.workspace }}' | tr -d ':' | tr '\\' '/' | tr '[:upper:]' '[:lower:]')"
+          mkdir -p "$HOME/repo"
+          rsync -a "$SRC"/ "$HOME/repo"/
+          cd "$HOME/repo"
+          # Defensive line-ending normalization for the shell scripts.
+          dos2unix .devcontainer/*.sh .devcontainer/allow_hosts.d/* 2>/dev/null || true
+          chmod +x .devcontainer/*.sh
+          echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
+          ssh-agent -a /tmp/ssh-agent.sock > /dev/null || true
+          export SSH_AUTH_SOCK=/tmp/ssh-agent.sock
+          export GH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          export GEMINI_API_KEY="dummy"
+          export ANTHROPIC_API_KEY="dummy"
+          .devcontainer/test.sh
