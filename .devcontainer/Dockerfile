@@ -41,7 +41,8 @@ ENV PATH="/home/vscode/.local/bin:/home/vscode/.local/share/mise/shims:${PATH}"
 # Install tools
 RUN mise use -g node@24
 RUN npm install -g @devcontainers/cli
-RUN npm install -g @anthropic-ai/claude-code
+# Install Claude Code via the native installer (https://code.claude.com/docs/ja/quickstart)
+RUN curl -fsSL https://claude.ai/install.sh | bash
 # Antigravity CLI is distributed as a native binary (installed to ~/.local/bin/agy), not via npm
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 RUN mise use -g ruby@latest

@@ -19,7 +19,7 @@ jobs:
 
       - name: Install devcontainer CLI and AI tools
         run: |
-          npm install -g @devcontainers/cli @anthropic-ai/claude-code
+          npm install -g @devcontainers/cli
           # Antigravity CLI is a native binary installed to ~/.local/bin/agy (not on npm)
           curl -fsSL https://antigravity.google/cli/install.sh | bash
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
