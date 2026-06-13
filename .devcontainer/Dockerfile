@@ -36,13 +36,14 @@ RUN install -dm 755 /etc/apt/keyrings \
 USER vscode
 ENV MISE_DATA_DIR=/home/vscode/.local/share/mise
 ENV MISE_CONFIG_DIR=/home/vscode/.config/mise
-ENV PATH="/home/vscode/.local/share/mise/shims:${PATH}"
+ENV PATH="/home/vscode/.local/bin:/home/vscode/.local/share/mise/shims:${PATH}"
 
 # Install tools
 RUN mise use -g node@24
 RUN npm install -g @devcontainers/cli
 RUN npm install -g @anthropic-ai/claude-code
-RUN npm install -g @google/gemini-cli
+# Antigravity CLI is distributed as a native binary (installed to ~/.local/bin/agy), not via npm
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 RUN mise use -g ruby@latest
 
 # Setup shell for mise

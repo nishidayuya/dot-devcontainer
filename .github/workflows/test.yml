@@ -19,13 +19,15 @@ jobs:
 
       - name: Install devcontainer CLI and AI tools
         run: |
-          npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
+          npm install -g @devcontainers/cli @anthropic-ai/claude-code
+          # Antigravity CLI is a native binary installed to ~/.local/bin/agy (not on npm)
+          curl -fsSL https://antigravity.google/cli/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Prepare mock files for mounts and authentication
         run: |
           mkdir -p ~/.claude ~/.gemini
           # Create dummy credential files to simulate web authentication
-          echo '{"dummy": true}' > ~/.gemini/oauth_creds.json
           echo '{"loggedIn": true, "dummy": true}' > ~/.claude/.credentials.json
           echo '{}' > ~/.claude.json
           git config --global user.email "you@example.com"
@@ -44,5 +46,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set dummy keys to see if the tools at least try to connect
-          GEMINI_API_KEY: "dummy"
           ANTHROPIC_API_KEY: "dummy"
