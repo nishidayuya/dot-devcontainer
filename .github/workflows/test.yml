@@ -62,12 +62,17 @@ jobs:
         uses: douglascamata/setup-docker-macos-action@v1.1.0
         with:
           # Give the Linux VM room for docker-in-docker + iptables + mise/ruby/node.
-          colima-additional-options: "--cpu 3 --memory 12"
+          # The default 20 GiB disk fills up while compiling Ruby, so bump it.
+          colima-additional-options: "--cpu 3 --memory 12 --disk 40"
 
       - name: Sanity check Docker
         run: |
           docker version
           docker info
+          echo "--- host disk ---"
+          df -h /
+          echo "--- container/VM disk ---"
+          docker run --rm debian:13 df -h /
 
       - name: Install Node.js
         uses: actions/setup-node@v4
