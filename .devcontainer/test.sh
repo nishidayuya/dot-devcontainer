@@ -3,7 +3,7 @@
 set -eux
 
 devcontainer --version
-gemini --version
+agy --version
 
 devcontainer build
 devcontainer up --workspace-folder . --remove-existing-container
@@ -30,29 +30,25 @@ exec devcontainer exec bash -eux -c '
     fi
   }
 
-  check_connectivity "https://generativelanguage.googleapis.com/"
+  check_connectivity "https://antigravity.google/"
   check_connectivity "https://api.anthropic.com/"
 
-  # Detect Gemini connection
-  gemini_authed=false
-  case "${GEMINI_API_KEY:-}" in
-    ""|dummy)
-      ;;
-    *)
-      gemini_authed=false
-      ;;
-  esac
-  if test -f "$HOME/.gemini/oauth_creds.json" && ! grep -q "dummy" "$HOME/.gemini/oauth_creds.json"
+  # Detect Antigravity connection
+  # Antigravity CLI authenticates via browser-based Google sign-in and stores
+  # its credentials under ~/.gemini. "agy models" requires a valid login, so we
+  # use it to probe whether the CLI is authenticated.
+  agy_authed=false
+  if agy models >/dev/null 2>&1
   then
-    gemini_authed=true
+    agy_authed=true
   fi
 
-  gemini --version
-  if test "$gemini_authed" = "true"
+  agy --version
+  if test "$agy_authed" = "true"
   then
-    gemini --approval-mode plan --prompt "Hello, World!"
+    agy --print "Hello, World!"
   else
-    gemini --approval-mode plan --prompt "Hello, World!" || echo "Gemini prompt failed as expected with dummy credentials"
+    agy --print --print-timeout 30s "Hello, World!" || echo "Antigravity prompt failed as expected without credentials"
   fi
 
   # Detect Claude connection

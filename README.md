@@ -3,12 +3,12 @@
 [![License X11](https://img.shields.io/badge/license-X11-blue.svg)](https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/LICENSE.txt)
 [![Latest tag](https://img.shields.io/github/v/tag/nishidayuya/dot-devcontainer)](https://github.com/nishidayuya/dot-devcontainer/tags)
 
-A Dev Container configuration template pre-installed with `mise` and `Gemini CLI`, featuring network access control (allowlist approach) via firewall.
+A Dev Container configuration template pre-installed with `mise` and `Antigravity CLI`, featuring network access control (allowlist approach) via firewall.
 
 ## Features
 
 - **Tool Management:** Manage Node.js, Ruby, and other tools using `mise`.
-- **AI Integration:** Comes with `Gemini CLI` (`@google/gemini-cli`) pre-installed.
+- **AI Integration:** Comes with `Antigravity CLI` (`agy`) pre-installed.
 - **Security:** Outbound network traffic is restricted using `iptables` to only allow connections to specified hosts.
 - **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`.
 
@@ -20,7 +20,7 @@ A Dev Container configuration template pre-installed with `mise` and `Gemini CLI
   - `mise`
   - `gh` (GitHub CLI)
   - `docker-in-docker`
-  - `Gemini CLI`
+  - `Antigravity CLI`
   - `Chromium` & `Chromium Driver`
 
 ## Usage
