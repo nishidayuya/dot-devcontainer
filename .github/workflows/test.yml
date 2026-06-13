@@ -27,7 +27,7 @@ jobs:
           # Create dummy credential files to simulate web authentication
           echo '{"dummy": true}' > ~/.gemini/oauth_creds.json
           echo '{"loggedIn": true, "dummy": true}' > ~/.claude/.credentials.json
-          touch ~/.claude.json
+          echo '{}' > ~/.claude.json
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
 
