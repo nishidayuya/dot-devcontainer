@@ -72,10 +72,9 @@ exec devcontainer exec bash -eux -c '
   claude --version
   if test "$claude_authed" = true
   then
-    echo "Claude authentication detected. Running print..."
-    claude --no-session-persistence --print "Hello, World!" || echo "Claude print failed as expected with dummy credentials"
-  else
     claude --no-session-persistence --print "Hello, World!"
+  else
+    claude --no-session-persistence --print "Hello, World!" || echo "Claude prompt failed as expected with dummy credentials"
   fi
 
   # Check GitHub CLI connection
