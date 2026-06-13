@@ -43,7 +43,8 @@ RUN mise use -g node@24
 RUN npm install -g @devcontainers/cli
 # Install Claude Code via the native installer (https://code.claude.com/docs/ja/quickstart)
 RUN curl -fsSL https://claude.ai/install.sh | bash
-RUN npm install -g @google/gemini-cli
+# Antigravity CLI is distributed as a native binary (installed to ~/.local/bin/agy), not via npm
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 RUN mise use -g ruby@latest
 
 # Setup shell for mise

@@ -1,5 +1,5 @@
 {
-  "name": "Mise & Gemini CLI Dev Container",
+  "name": "Mise & Antigravity CLI Dev Container",
   "build": {
     "dockerfile": "Dockerfile"
   },
