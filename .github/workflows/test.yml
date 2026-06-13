@@ -19,7 +19,7 @@ jobs:
 
       - name: Install devcontainer CLI and AI tools
         run: |
-          npm install -g @devcontainers/cli @google/gemini-cli @anthropic-ai/claude-code
+          npm install -g @devcontainers/cli @google/gemini-cli
 
       - name: Prepare mock files for mounts and authentication
         run: |
