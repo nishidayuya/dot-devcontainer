@@ -27,6 +27,7 @@
   "overrideCommand": true,
   "postStartCommand": "sudo bash .devcontainer/setup-firewall.sh",
   "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
   "customizations": {
     "vscode": {
       "extensions": [
