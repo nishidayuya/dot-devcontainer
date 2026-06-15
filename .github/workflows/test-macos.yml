@@ -1,0 +1,63 @@
+name: CI (macOS)
+
+on:
+  push:
+    branches:
+      - main
+      - worktree-add_macos_test
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-macos:
+    # Intel (x86_64) runner. The devcontainer Dockerfile pins the mise apt
+    # source to arch=amd64, so an arm64 runner (macos-14/15) would fail to
+    # install mise. macos-13 is x86_64 and matches the amd64 container image.
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Docker via Colima
+        run: |
+          # macOS GitHub runners do not ship a Docker daemon. Colima provides
+          # a Linux VM with a Docker daemon that the devcontainer CLI can use.
+          brew install colima docker
+          colima start --cpu 4 --memory 12 --disk 30
+          docker version
+          docker info
+
+      - name: Install devcontainer CLI and AI tools
+        run: |
+          npm install -g @devcontainers/cli
+          # Antigravity CLI is a native binary installed to ~/.local/bin/agy (not on npm)
+          curl -fsSL https://antigravity.google/cli/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare mock files for mounts and authentication
+        run: |
+          mkdir -p ~/.claude ~/.gemini
+          # Create dummy credential files to simulate web authentication
+          echo '{"loggedIn": true, "dummy": true}' > ~/.claude/.credentials.json
+          echo '{}' > ~/.claude.json
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+      - name: Prepare environment
+        run: |
+          # Ensure GH_TOKEN is set for initializeCommand
+          echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
+          # Mock SSH agent
+          ssh-agent -a /tmp/ssh-agent.sock > /dev/null
+          echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
+
+      - name: Run test.sh
+        run: .devcontainer/test.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Set dummy keys to see if the tools at least try to connect
+          ANTHROPIC_API_KEY: "dummy"
