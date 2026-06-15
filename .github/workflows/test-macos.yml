@@ -11,9 +11,11 @@ on:
 jobs:
   test-macos:
     # Intel (x86_64) runner. The devcontainer Dockerfile pins the mise apt
-    # source to arch=amd64, so an arm64 runner (macos-14/15) would fail to
-    # install mise. macos-13 is x86_64 and matches the amd64 container image.
-    runs-on: macos-13
+    # source to arch=amd64, so an arm64 runner (macos-14/15 default) would
+    # fail to install mise; arm64 runners also cannot run Colima's VM
+    # (nested virtualization is unsupported -> HV_UNSUPPORTED). macos-13 is
+    # retired, so use the current Intel image macos-15-intel.
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
 
@@ -26,8 +28,14 @@ jobs:
         run: |
           # macOS GitHub runners do not ship a Docker daemon. Colima provides
           # a Linux VM with a Docker daemon that the devcontainer CLI can use.
+          df -h /
           brew install colima docker
+          # Default memory (2 GiB) causes OOM during the heavy image build, so
+          # raise it. Colima makes itself the default docker context on start.
           colima start --cpu 4 --memory 12 --disk 30
+          # Some tooling hardcodes /var/run/docker.sock instead of honoring the
+          # docker context; symlink Colima's socket there as insurance.
+          sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock
           docker version
           docker info
 
