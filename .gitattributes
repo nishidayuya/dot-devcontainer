@@ -1,0 +1,5 @@
+# Keep shell scripts and dev container files LF-terminated even when checked
+# out on Windows. Otherwise Git's autocrlf turns them into CRLF, which breaks
+# the `#!/bin/sh` shebang ("required file not found") when run under WSL/Linux.
+*.sh text eol=lf
+.devcontainer/** text eol=lf
