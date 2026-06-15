@@ -1,0 +1,57 @@
+name: DIAG firewall (macOS)
+
+# Temporary, fast diagnostic: reproduce only the setup-firewall.sh behavior in
+# a lightweight container under Colima (no heavy devcontainer build) to learn
+# why github.com:443 is rejected on macOS. Delete once the cause is found.
+
+on:
+  push:
+    branches:
+      - worktree-add_macos_test
+
+jobs:
+  diag:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Docker via Colima
+        run: |
+          brew install colima docker
+          colima start --cpu 4 --memory 12 --disk 30
+          sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock
+          docker version
+
+      - name: Reproduce firewall and probe github.com
+        run: |
+          docker run --rm --cap-add=NET_ADMIN \
+            -v "$PWD:/workspace" -w /workspace \
+            mcr.microsoft.com/devcontainers/base:debian-13 \
+            bash -euxc '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq
+              apt-get install -y -qq iptables curl ca-certificates jq dnsutils >/dev/null
+
+              echo "=== BEFORE firewall: resolve + reach github.com ==="
+              getent ahosts github.com || true
+              curl -I -s -m 10 https://github.com/ -o /dev/null -w "before github.com http=%{http_code}\n" || echo "before github.com curl failed"
+
+              echo "=== run-parts output of 00-github (raw) ==="
+              sh .devcontainer/allow_hosts.d/00-github | sed -n "1,20p" || echo "00-github FAILED"
+              echo "=== 00-github IP range count ==="
+              sh .devcontainer/allow_hosts.d/00-github | grep -cE "^([0-9]{1,3}\.){3}[0-9]{1,3}(/[0-9]{1,2})?$" || echo 0
+
+              echo "=== apply setup-firewall.sh ==="
+              bash .devcontainer/setup-firewall.sh
+
+              echo "=== iptables rules for 140.82 ==="
+              iptables-save | grep -E "140\.82" | head -20 || echo "(no 140.82 rules)"
+              echo "=== total OUTPUT ACCEPT rules ==="
+              iptables-save | grep -c "A OUTPUT.*ACCEPT" || true
+
+              echo "=== AFTER firewall: gh-style probe to github.com ==="
+              for i in 1 2 3; do
+                getent ahosts github.com | head -1
+              done
+              curl -I -s -m 10 https://github.com/ -o /dev/null -w "after github.com http=%{http_code}\n" || echo "after github.com curl REFUSED/failed"
+            '
