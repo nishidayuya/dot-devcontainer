@@ -69,3 +69,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set dummy keys to see if the tools at least try to connect
           ANTHROPIC_API_KEY: "dummy"
+
+      # Temporary diagnostics: the container from `devcontainer up` is still
+      # running, so inspect the firewall state that test.sh exercised.
+      - name: Diagnose firewall (on failure)
+        if: failure()
+        run: |
+          devcontainer exec --workspace-folder . bash -euxc '
+            echo "=== resolve github.com ==="
+            getent ahosts github.com || true
+            echo "=== iptables rules mentioning github IPs / 140.82 ==="
+            sudo iptables-save | grep -E "140\.82|github" || echo "(no 140.82 rules found)"
+            echo "=== total ACCEPT OUTPUT rules ==="
+            sudo iptables-save | grep -c "A OUTPUT.*ACCEPT" || true
+            echo "=== re-fetch api.github.com/meta (jq present?) ==="
+            which jq && jq --version || echo "jq MISSING"
+            curl -s -m 15 -H "Accept: application/vnd.github+json" https://api.github.com/meta | jq -r ".web[], .git[]" 2>&1 | head -20 || echo "meta fetch FAILED"
+          ' || true
