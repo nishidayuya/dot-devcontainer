@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - worktree-add_macos_test
   pull_request:
     branches: [ main ]
 
@@ -29,9 +30,14 @@ jobs:
           # a Linux VM with a Docker daemon that the devcontainer CLI can use.
           df -h /
           brew install colima docker
-          # Default memory (2 GiB) causes OOM during the heavy image build, so
-          # raise it. Colima makes itself the default docker context on start.
-          colima start --cpu 4 --memory 12 --disk 30
+          # Colima makes itself the default docker context on start.
+          # Build tuning: ruby-build compiles Ruby with `make -j <nproc>`, and
+          # at 4 parallel jobs gcc's cc1 intermittently hits an internal
+          # compiler error (segfault) under the Colima VM. Capping the VM at 2
+          # CPUs (so make runs -j2) with a bit more memory builds reliably.
+          # Raised memory also avoids OOM during the heavy image build (the
+          # 2 GiB default is far too small).
+          colima start --cpu 2 --memory 13 --disk 30
           # Some tooling hardcodes /var/run/docker.sock instead of honoring the
           # docker context; symlink Colima's socket there as insurance.
           sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock
