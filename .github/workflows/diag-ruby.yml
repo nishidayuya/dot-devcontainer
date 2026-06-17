@@ -30,10 +30,10 @@ jobs:
               apt-get install -y -qq \
                 build-essential libssl-dev libyaml-dev libreadline6-dev \
                 zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev \
-                curl ca-certificates wget gpg >/dev/null
+                curl ca-certificates wget gpg procps >/dev/null
 
               echo "=== resources ==="
-              nproc; free -m; df -h /
+              nproc || true; free -m || true; df -h / || true
 
               echo "=== install mise ==="
               install -dm 755 /etc/apt/keyrings
