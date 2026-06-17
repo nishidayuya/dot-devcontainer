@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - worktree-add_macos_test
   pull_request:
     branches: [ main ]
 

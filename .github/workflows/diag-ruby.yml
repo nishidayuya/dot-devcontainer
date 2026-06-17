@@ -1,0 +1,61 @@
+name: DIAG ruby build (macOS)
+
+# Temporary, fast diagnostic: reproduce only the `mise use -g ruby@latest`
+# step from the Dockerfile in a lightweight container under Colima, and dump
+# the ruby-build log + resource info on failure. Delete once the cause is found.
+
+on:
+  push:
+    branches:
+      - worktree-add_macos_test
+
+jobs:
+  diag-ruby:
+    runs-on: macos-15-intel
+    steps:
+      - name: Install Docker via Colima
+        run: |
+          brew install colima docker
+          colima start --cpu 4 --memory 12 --disk 30
+          sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock
+          docker version
+
+      - name: Reproduce ruby build
+        run: |
+          docker run --rm \
+            debian:trixie \
+            bash -euxc '
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq
+              apt-get install -y -qq \
+                build-essential libssl-dev libyaml-dev libreadline6-dev \
+                zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev \
+                curl ca-certificates wget gpg >/dev/null
+
+              echo "=== resources ==="
+              nproc; free -m; df -h /
+
+              echo "=== install mise ==="
+              install -dm 755 /etc/apt/keyrings
+              wget -qO - https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg
+              echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=amd64] https://mise.jdx.dev/deb stable main" > /etc/apt/sources.list.d/mise.list
+              apt-get update -qq
+              apt-get install -y -qq mise >/dev/null
+              mise --version
+
+              echo "=== build ruby@latest (verbose) ==="
+              export MISE_VERBOSE=1
+              if mise use -g ruby@latest; then
+                echo "RUBY BUILD OK"
+                mise exec -- ruby --version
+              else
+                echo "RUBY BUILD FAILED; dumping tail of build log"
+                for f in /tmp/ruby-build.*.log; do
+                  echo "----- $f -----"
+                  tail -80 "$f" || true
+                done
+                echo "=== resources after failure ==="
+                free -m; df -h /
+                exit 1
+              fi
+            '
