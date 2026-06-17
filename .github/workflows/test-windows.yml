@@ -14,6 +14,12 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 120
     steps:
+      # Keep LF line endings on checkout. Without this, Git's autocrlf converts
+      # the shell scripts to CRLF, which breaks the `#!/bin/sh` shebang
+      # ("required file not found", exit 127) when run under WSL/Linux.
+      - name: Disable Git autocrlf so scripts keep LF endings
+        run: git config --global core.autocrlf false
+
       - uses: actions/checkout@v4
 
       # The dev container is Linux-based (debian + docker-in-docker), which the
