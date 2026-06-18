@@ -37,7 +37,11 @@ jobs:
           # CPUs (so make runs -j2) with a bit more memory builds reliably.
           # Raised memory also avoids OOM during the heavy image build (the
           # 2 GiB default is far too small).
-          colima start --cpu 2 --memory 13 --disk 30
+          # Pin reliable DNS servers: Colima's default VM resolver is flaky and
+          # intermittently fails to resolve hosts like ghcr.io during the build
+          # (getaddrinfo ENOTFOUND). 8.8.8.8/8.8.4.4 are also what
+          # setup-firewall.sh allows for DNS, so this stays consistent.
+          colima start --cpu 2 --memory 13 --disk 30 --dns 8.8.8.8 --dns 8.8.4.4
           # Some tooling hardcodes /var/run/docker.sock instead of honoring the
           # docker context; symlink Colima's socket there as insurance.
           sudo ln -sf "$HOME/.colima/default/docker.sock" /var/run/docker.sock
@@ -69,7 +73,24 @@ jobs:
           echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
 
       - name: Run test.sh
-        run: .devcontainer/test.sh
+        # The build pulls a lot over the network from inside the Colima VM
+        # (base image, apt, mise/ruby, claude.ai, antigravity, ghcr.io
+        # features). Those occasionally hit transient VM-network failures
+        # (DNS lookup, dropped TLS). Retry once; Docker layer caching makes the
+        # second attempt resume quickly from where the first left off.
+        run: |
+          for attempt in 1 2; do
+            echo "::group::test.sh attempt ${attempt}"
+            if .devcontainer/test.sh; then
+              echo "::endgroup::"
+              echo "test.sh passed on attempt ${attempt}"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "test.sh failed on attempt ${attempt}"
+          done
+          echo "test.sh failed after all attempts"
+          exit 1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set dummy keys to see if the tools at least try to connect
