@@ -25,7 +25,7 @@
     ".devcontainer/.env.additional"
   ],
   "overrideCommand": true,
-  "postStartCommand": "sudo bash .devcontainer/setup-firewall.sh",
+  "postStartCommand": "sudo bash .devcontainer/setup-firewall.sh && bash .devcontainer/setup-known-hosts.sh",
   "remoteUser": "vscode",
   "updateRemoteUserUID": true,
   "customizations": {
