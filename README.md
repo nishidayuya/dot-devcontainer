@@ -44,6 +44,7 @@ DOT_DEVCONTAINER_REF="$(git ls-remote https://github.com/nishidayuya/dot-devcont
 1. Open your project in VS Code.
 2. Run the `Dev Containers: Reopen in Container` command.
 3. `.devcontainer/setup-firewall.sh` will run automatically on start to apply the firewall rules.
+4. `.devcontainer/setup-known-hosts.sh` will run automatically on start to add GitHub's SSH host keys (fetched at startup via `ssh-keyscan`) to `~/.ssh/known_hosts`.
 
 ## Firewall Configuration
 
