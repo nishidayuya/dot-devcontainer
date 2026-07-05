@@ -46,6 +46,9 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 # Antigravity CLI is distributed as a native binary (installed to ~/.local/bin/agy), not via npm
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 RUN mise use -g ruby@latest
+# DevPod CLI has no core mise plugin; install it via this asdf plugin
+RUN mise plugin install devpod-cli https://github.com/salemgolemugoo/asdf-devpod-cli.git \
+    && mise use -g devpod-cli@latest
 
 # Setup shell for mise
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
