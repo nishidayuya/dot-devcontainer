@@ -26,12 +26,14 @@ jobs:
 
       - name: Prepare mock files for mounts and authentication
         run: |
-          mkdir -p ~/.claude ~/.gemini
+          dev_container_home="$HOME/dev_container_home"
+          echo "DOT_DEVCONTAINER_HOME=$dev_container_home" >> "$GITHUB_ENV"
+          mkdir -p "$dev_container_home/.claude" "$dev_container_home/.gemini"
           # Create dummy credential files to simulate web authentication
-          echo '{"loggedIn": true, "dummy": true}' > ~/.claude/.credentials.json
-          echo '{}' > ~/.claude.json
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
+          echo '{"loggedIn": true, "dummy": true}' > "$dev_container_home/.claude/.credentials.json"
+          echo '{}' > "$dev_container_home/.claude.json"
+          git config --file "$dev_container_home/.gitconfig" user.email "you@example.com"
+          git config --file "$dev_container_home/.gitconfig" user.name "Your Name"
 
       - name: Prepare environment
         run: |
