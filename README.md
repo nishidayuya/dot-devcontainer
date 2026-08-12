@@ -16,7 +16,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 ## Stack
 
 - **OS:** Debian 13 (Bookworm)
-- **Package Managers:** `apt`, `npm`, `gem`
+- **Package Managers:** `apt`, `gem` (`npm` is available once Node.js is enabled in the `Dockerfile`)
 - **Key Tools:**
   - `mise`
   - `gh` (GitHub CLI)
@@ -88,7 +88,7 @@ means extensions such as `.sh` are silently skipped.
 
 ## Firewall Configuration
 
-By default, traffic to major services like GitHub, RubyGems, npm, Google, and Microsoft is allowed.
+By default, traffic to major services like GitHub, RubyGems, npm, Node.js, Google, and Microsoft is allowed.
 
 To add allowed hosts, create a new file in `.devcontainer/allow_hosts.d/` and list domain names or IP addresses (one per line).
 

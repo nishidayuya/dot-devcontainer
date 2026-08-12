@@ -11,6 +11,10 @@ exec devcontainer exec bash -eux -c '
   ruby --version
   gem install rake
 
+  # Node.js is not installed in the image anymore (the Dev Container CLI
+  # standalone installer bundles its own runtime), so install it here to verify
+  # that mise can fetch it and that npm works through the firewall.
+  mise use -g node@24
   node --version
   npm install -g es6-map
 

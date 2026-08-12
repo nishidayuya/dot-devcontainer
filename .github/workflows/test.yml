@@ -12,14 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-
       - name: Install devcontainer CLI and AI tools
         run: |
-          npm install -g @devcontainers/cli
+          # The standalone installer bundles its own Node.js runtime, so no
+          # Node.js/npm setup is required on the runner
+          curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
+          echo "$HOME/.devcontainers/bin" >> "$GITHUB_PATH"
           # Antigravity CLI is a native binary installed to ~/.local/bin/agy (not on npm)
           curl -fsSL https://antigravity.google/cli/install.sh | bash
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
