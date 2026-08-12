@@ -36,11 +36,13 @@ RUN install -dm 755 /etc/apt/keyrings \
 USER vscode
 ENV MISE_DATA_DIR=/home/vscode/.local/share/mise
 ENV MISE_CONFIG_DIR=/home/vscode/.config/mise
-ENV PATH="/home/vscode/.local/bin:/home/vscode/.local/share/mise/shims:${PATH}"
+ENV PATH="/home/vscode/.local/bin:/home/vscode/.devcontainers/bin:/home/vscode/.local/share/mise/shims:${PATH}"
 
 # Install tools
 RUN mise use -g node@24
-RUN npm install -g @devcontainers/cli
+# Dev Container CLI is installed with the standalone script, which bundles its
+# own Node.js runtime (https://github.com/devcontainers/cli#install-script)
+RUN curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
 # Install Claude Code via the native installer (https://code.claude.com/docs/ja/quickstart)
 RUN curl -fsSL https://claude.ai/install.sh | bash
 # Antigravity CLI is distributed as a native binary (installed to ~/.local/bin/agy), not via npm
