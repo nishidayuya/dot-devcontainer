@@ -18,14 +18,14 @@
   "capAdd": [
     "NET_ADMIN"
   ],
-  "initializeCommand": "run-parts --exit-on-error --verbose .devcontainer/initialize_command.d",
+  "initializeCommand": ".devcontainer/run-parts.sh .devcontainer/initialize_command.d",
   "runArgs": [
     "--init",
     "--env-file",
     ".devcontainer/.env.additional"
   ],
   "overrideCommand": true,
-  "postStartCommand": "run-parts --exit-on-error --verbose .devcontainer/post_start_command.d",
+  "postStartCommand": ".devcontainer/run-parts.sh .devcontainer/post_start_command.d",
   "remoteUser": "vscode",
   "updateRemoteUserUID": true,
   "customizations": {
