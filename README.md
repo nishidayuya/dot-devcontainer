@@ -75,7 +75,7 @@ it is resolved on the host.
 
 ## Firewall Configuration
 
-By default, traffic to major services like GitHub, RubyGems, npm, Google, and Microsoft is allowed.
+By default, traffic to major services like GitHub, RubyGems, npm, Node.js, Google, and Microsoft is allowed.
 
 To add allowed hosts, create a new file in `.devcontainer/allow_hosts.d/` and list domain names or IP addresses (one per line).
 
