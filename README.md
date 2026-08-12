@@ -16,7 +16,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 ## Stack
 
 - **OS:** Debian 13 (Bookworm)
-- **Package Managers:** `apt`, `npm`, `gem`
+- **Package Managers:** `apt`, `gem` (`npm` is available once Node.js is enabled in the `Dockerfile`)
 - **Key Tools:**
   - `mise`
   - `gh` (GitHub CLI)

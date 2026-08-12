@@ -11,8 +11,10 @@ exec devcontainer exec bash -eux -c '
   ruby --version
   gem install rake
 
-  node --version
-  npm install -g es6-map
+  # Node.js is not installed by default anymore. Uncomment together with the
+  # "mise use -g node@24" line in the Dockerfile.
+  # node --version
+  # npm install -g es6-map
 
   devcontainer --version
 

@@ -39,7 +39,6 @@ ENV MISE_CONFIG_DIR=/home/vscode/.config/mise
 ENV PATH="/home/vscode/.local/bin:/home/vscode/.devcontainers/bin:/home/vscode/.local/share/mise/shims:${PATH}"
 
 # Install tools
-RUN mise use -g node@24
 # Dev Container CLI is installed with the standalone script, which bundles its
 # own Node.js runtime (https://github.com/devcontainers/cli#install-script)
 RUN curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
@@ -48,6 +47,9 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 # Antigravity CLI is distributed as a native binary (installed to ~/.local/bin/agy), not via npm
 RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
 RUN mise use -g ruby@latest
+# Node.js is not required anymore: the Dev Container CLI standalone installer
+# bundles its own runtime. Uncomment if your project needs Node.js and npm.
+# RUN mise use -g node@24
 
 # Setup shell for mise
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
