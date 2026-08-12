@@ -77,7 +77,9 @@ cat <<EOF >> "$RULES_FILE"
 COMMIT
 EOF
 
+# Only this step needs root, so the script itself can be run as the remote user
+# by run-parts.
 echo "Applying firewall rules using iptables-restore..."
-iptables-restore -w < "$RULES_FILE"
+sudo iptables-restore -w < "$RULES_FILE"
 
 echo "Firewall rules applied."

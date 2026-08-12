@@ -69,9 +69,22 @@ it is resolved on the host.
 
 1. Open your project in VS Code.
 2. Run the `Dev Containers: Reopen in Container` command.
-3. `.devcontainer/setup-firewall.sh` will run automatically on start to apply the firewall rules.
-4. `.devcontainer/setup-dev-container-home.sh` will run automatically on start to create symlinks in the container home directory (`/home/vscode`) for every entry directly under `/dev_container_home`. Entries with the same name in the home directory are replaced by the symlinks.
-5. `.devcontainer/setup-known-hosts.sh` will run automatically on start to add GitHub's SSH host keys (fetched at startup via `ssh-keyscan`) to `~/.ssh/known_hosts`.
+3. The scripts in `.devcontainer/post_start_command.d/` will run automatically on start, in filename order:
+   - `00-firewall` applies the firewall rules.
+   - `10-dev-container-home` creates symlinks in the container home directory (`/home/vscode`) for every entry directly under `/dev_container_home`. Entries with the same name in the home directory are replaced by the symlinks.
+   - `20-known-hosts` adds GitHub's SSH host keys (fetched at startup via `ssh-keyscan`) to `~/.ssh/known_hosts`.
+   - `30-claude-update` runs `claude update` to keep Claude Code on the latest version. Failures are ignored, so a network hiccup does not block startup.
+
+The scripts in `.devcontainer/initialize_command.d/` run the same way, but on the **host** and before the container is created.
+
+Both directories are driven by `.devcontainer/run-parts.sh`, a POSIX `sh`
+reimplementation of `run-parts --exit-on-error --verbose`. `run-parts` itself
+ships with Debian's `debianutils`, so relying on it would break the host-side
+`initializeCommand` on a macOS host.
+
+To add your own step, drop an executable file into either directory. Names may
+only contain letters, digits, `_` and `-` — that is `run-parts`' own rule, and it
+means extensions such as `.sh` are silently skipped.
 
 ## Firewall Configuration
 
@@ -87,7 +100,7 @@ api.example.com
 
 To apply changes inside the container, run:
 ```bash
-sudo sh .devcontainer/setup-firewall.sh
+.devcontainer/post_start_command.d/00-firewall
 ```
 
 ## Prerequisites
