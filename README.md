@@ -73,6 +73,7 @@ it is resolved on the host.
    - `00-firewall` applies the firewall rules.
    - `10-dev-container-home` creates symlinks in the container home directory (`/home/vscode`) for every entry directly under `/dev_container_home`. Entries with the same name in the home directory are replaced by the symlinks.
    - `20-known-hosts` adds GitHub's SSH host keys (fetched at startup via `ssh-keyscan`) to `~/.ssh/known_hosts`.
+   - `30-claude-update` runs `claude update` to keep Claude Code on the latest version. Failures are ignored, so a network hiccup does not block startup.
 
 The scripts in `.devcontainer/initialize_command.d/` run on the **host** before the container is created, also via `run-parts`. Add your own steps by dropping an executable file into either directory; `run-parts` skips filenames containing a `.`, so do not use extensions such as `.sh`.
 
