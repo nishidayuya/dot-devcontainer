@@ -18,14 +18,14 @@
   "capAdd": [
     "NET_ADMIN"
   ],
-  "initializeCommand": "./.devcontainer/initialize-command.sh",
+  "initializeCommand": "run-parts --exit-on-error --verbose .devcontainer/initialize_command.d",
   "runArgs": [
     "--init",
     "--env-file",
     ".devcontainer/.env.additional"
   ],
   "overrideCommand": true,
-  "postStartCommand": "sudo bash .devcontainer/setup-firewall.sh && bash .devcontainer/setup-dev-container-home.sh && bash .devcontainer/setup-known-hosts.sh",
+  "postStartCommand": "run-parts --exit-on-error --verbose .devcontainer/post_start_command.d",
   "remoteUser": "vscode",
   "updateRemoteUserUID": true,
   "customizations": {

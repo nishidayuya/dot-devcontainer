@@ -69,9 +69,12 @@ it is resolved on the host.
 
 1. Open your project in VS Code.
 2. Run the `Dev Containers: Reopen in Container` command.
-3. `.devcontainer/setup-firewall.sh` will run automatically on start to apply the firewall rules.
-4. `.devcontainer/setup-dev-container-home.sh` will run automatically on start to create symlinks in the container home directory (`/home/vscode`) for every entry directly under `/dev_container_home`. Entries with the same name in the home directory are replaced by the symlinks.
-5. `.devcontainer/setup-known-hosts.sh` will run automatically on start to add GitHub's SSH host keys (fetched at startup via `ssh-keyscan`) to `~/.ssh/known_hosts`.
+3. The scripts in `.devcontainer/post_start_command.d/` will run automatically on start, via `run-parts`, in filename order:
+   - `00-firewall` applies the firewall rules.
+   - `10-dev-container-home` creates symlinks in the container home directory (`/home/vscode`) for every entry directly under `/dev_container_home`. Entries with the same name in the home directory are replaced by the symlinks.
+   - `20-known-hosts` adds GitHub's SSH host keys (fetched at startup via `ssh-keyscan`) to `~/.ssh/known_hosts`.
+
+The scripts in `.devcontainer/initialize_command.d/` run on the **host** before the container is created, also via `run-parts`. Add your own steps by dropping an executable file into either directory; `run-parts` skips filenames containing a `.`, so do not use extensions such as `.sh`.
 
 ## Firewall Configuration
 
@@ -87,7 +90,7 @@ api.example.com
 
 To apply changes inside the container, run:
 ```bash
-sudo sh .devcontainer/setup-firewall.sh
+.devcontainer/post_start_command.d/00-firewall
 ```
 
 ## Prerequisites
