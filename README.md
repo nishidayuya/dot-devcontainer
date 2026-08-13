@@ -34,6 +34,20 @@ Run the following command in your project root to install the `.devcontainer` di
 curl -f -sL https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/install.sh | sh
 ```
 
+To pin a specific version, set `DOT_DEVCONTAINER_REF` to a tag from the
+[tag list](https://github.com/nishidayuya/dot-devcontainer/tags), and fetch
+`install.sh` from that same ref so that the installer and the installed files
+stay in sync:
+
+```sh
+DOT_DEVCONTAINER_REF=v4.0.0
+curl -f -sL "https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/$DOT_DEVCONTAINER_REF/install.sh" |
+  DOT_DEVCONTAINER_REF="$DOT_DEVCONTAINER_REF" sh
+```
+
+`DOT_DEVCONTAINER_REF` accepts any Git ref — a tag, a branch name, or a commit
+SHA. It defaults to `main`.
+
 For [`git-cococo`](https://github.com/nishidayuya/git-cococo) junkies:
 
 ```sh
