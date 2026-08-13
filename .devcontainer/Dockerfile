@@ -85,6 +85,23 @@ RUN mise use -g ruby@latest
 # Node.js is not required anymore: the Dev Container CLI standalone installer
 # bundles its own runtime. Uncomment if your project needs Node.js and npm.
 # RUN mise use -g node@24
+# Rust is not installed by default. Uncomment if your project needs rustc and
+# cargo. mise installs and drives rustup under the hood.
+# RUN mise use -g rust@latest
+# Git is already provided by apt above. Uncomment to manage a newer Git with
+# mise instead, using the asdf-git plugin
+# (https://github.com/nishidayuya/asdf-git). It builds Git from source, so the
+# first RUN below installs Git's extra build dependencies. Git 2.55 and later
+# also build Rust code (libgitcore) unless NO_RUST is set, so the rust line
+# above has to be uncommented too.
+# RUN sudo apt-get update \
+#     && sudo env -- DEBIAN_FRONTEND=noninteractive \
+#     apt-get -y install --no-install-recommends \
+#     gettext \
+#     libcurl4-openssl-dev \
+#     libexpat1-dev
+# RUN mise plugin add git https://github.com/nishidayuya/asdf-git \
+#     && mise use -g git@latest
 
 # Setup shell for mise
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \

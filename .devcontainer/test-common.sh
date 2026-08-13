@@ -16,6 +16,45 @@ mise use -g node@24
 node --version
 npm install -g es6-map
 
+# Rust is not installed in the image either (see the commented-out lines in the
+# Dockerfile), so install it here to verify that mise can bootstrap rustup and
+# that cargo can reach the crates.io registry through the firewall.
+mise use -g rust@latest
+rustc --version
+cargo --version
+rust_test_dir="$(mktemp -d)"
+cargo init --vcs none --name dot_devcontainer_rust_test "$rust_test_dir"
+cd "$rust_test_dir"
+cargo add anyhow
+cargo build
+cd -
+
+# Git comes from apt in the image (see the commented-out lines in the
+# Dockerfile), so install it here to verify that mise can build Git from source
+# with the asdf-git plugin through the firewall. This has to run after the Rust
+# step above: Git 2.55 and later build libgitcore with cargo unless NO_RUST is
+# set.
+#
+# Install Git's extra build dependencies first, the same way the commented-out
+# Dockerfile lines do.
+sudo apt-get update
+sudo env -- DEBIAN_FRONTEND=noninteractive \
+  apt-get -y install --no-install-recommends \
+  gettext \
+  libcurl4-openssl-dev \
+  libexpat1-dev
+mise plugin add git https://github.com/nishidayuya/asdf-git
+mise use -g git@latest
+# The mise shims directory comes first in PATH, so plain "git" must now resolve
+# to the mise-managed build instead of /usr/bin/git. hash -r drops any path this
+# shell already remembered for git.
+hash -r
+git --version
+test "$(git --exec-path)" = "$(mise where git)/libexec/git-core"
+# git-subtree is one of the contrib commands the asdf-git plugin installs by
+# default, so its presence proves the contrib build step ran too.
+test -x "$(git --exec-path)/git-subtree"
+
 devcontainer --version
 devpod version
 
