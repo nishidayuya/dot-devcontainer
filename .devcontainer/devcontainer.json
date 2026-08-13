@@ -19,10 +19,13 @@
     "NET_ADMIN"
   ],
   "initializeCommand": ".devcontainer/run-parts.sh .devcontainer/initialize_command.d",
+  // The path has to be absolute: the Dev Container CLI resolves runArgs
+  // relative to the workspace folder, but DevPod runs "docker run" from its own
+  // agent directory, where a relative path does not exist.
   "runArgs": [
     "--init",
     "--env-file",
-    ".devcontainer/.env.additional"
+    "${localWorkspaceFolder}/.devcontainer/.env.additional"
   ],
   "overrideCommand": true,
   "postStartCommand": ".devcontainer/run-parts.sh .devcontainer/post_start_command.d",

@@ -9,6 +9,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 
 - **Tool Management:** Manage Node.js, Ruby, and other tools using `mise`.
 - **AI Integration:** Comes with `Antigravity CLI` (`agy`) pre-installed.
+- **Nested dev containers:** Both the `Dev Container CLI` (`devcontainer`) and the `DevPod CLI` (`devpod`) are pre-installed, so a project's dev container can be built and started from inside this one.
 - **Security:** Outbound network traffic is restricted using `iptables` to only allow connections to specified hosts.
 - **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`.
 - **Independent home directory:** The directory pointed to by `DOT_DEVCONTAINER_HOME` on the host is mounted at `/dev_container_home`, and its entries are symlinked into the container home directory on start. Your real home directory is never mounted.
@@ -21,6 +22,8 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
   - `mise`
   - `gh` (GitHub CLI)
   - `docker-in-docker`
+  - `devcontainer` (Dev Container CLI)
+  - `devpod` (DevPod CLI, with the built-in `docker` provider)
   - `Antigravity CLI`
   - `Chromium` & `Chromium Driver`
 
@@ -99,6 +102,40 @@ ships with Debian's `debianutils`, so relying on it would break the host-side
 To add your own step, drop an executable file into either directory. Names may
 only contain letters, digits, `_` and `-` — that is `run-parts`' own rule, and it
 means extensions such as `.sh` are silently skipped.
+
+### Running a dev container from inside the container
+
+Thanks to the `docker-in-docker` feature, a project's own `devcontainer.json`
+can be built and started from inside this container with either CLI:
+
+```sh
+devcontainer up --workspace-folder .
+devpod up .
+```
+
+The `docker` provider is registered at image build time and is therefore already
+DevPod's default provider, so it targets the local Docker daemon and needs no
+further setup. Enter the workspace from a shell:
+
+```sh
+devpod ssh <workspace>
+```
+
+Three DevPod defaults are changed for this template:
+
+- The default IDE is `none` (`devpod ide use none`), because DevPod otherwise
+  falls back to opening VS Code and there is none to open in here. Pass
+  `--ide vscode --open-ide=false` to `devpod up` if you want its server backend
+  installed so that you can attach to the workspace later.
+- Telemetry, through the `DEVPOD_DISABLE_TELEMETRY` environment variable,
+  because the firewall blocks its endpoint anyway.
+- Git credential and ssh signature forwarding (`SSH_INJECT_GIT_CREDENTIALS`,
+  `GIT_SSH_SIGNATURE_FORWARDING`), because both work by editing `~/.gitconfig`
+  inside the workspace. Here that file is a symlink into `/dev_container_home`,
+  so DevPod would write through it into the configuration shared with the host
+  and leave behind helpers pointing at paths that exist only inside the
+  workspace. Re-enable them with `devpod context set-options` if you need git
+  credentials forwarded and can live with that.
 
 ## Firewall Configuration
 
