@@ -9,6 +9,12 @@ index.docker.io
 # Docker Engine installation
 download.docker.com
 
+# Docker Hub serves blobs from either its Cloudflare or its CloudFront CDN
+# depending on the region, and only the Cloudflare one is on Docker's own allow
+# list. Without this, pulling e.g. the docker/dockerfile BuildKit frontend
+# (which DevPod's build always resolves) fails with "connection refused".
+production.cloudfront.docker.com
+
 # webg --text --css-selector='table .link' https://docs.docker.com/desktop/setup/allow-list/ |
 # sed -E -e 's|^https?://||' |
 # sort
