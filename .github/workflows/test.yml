@@ -9,18 +9,45 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      # Report both CLIs even when one of them fails, instead of cancelling the
+      # other leg as soon as the first one breaks.
+      fail-fast: false
+      matrix:
+        cli: [devcontainer, devpod]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install devcontainer CLI and AI tools
+      # Only the CLI this leg drives is installed. Antigravity CLI and the other
+      # tools are checked inside the container by test-common.sh, so the runner
+      # does not need them.
+      - name: Install Dev Container CLI
+        if: matrix.cli == 'devcontainer'
         run: |
           # The standalone installer bundles its own Node.js runtime, so no
           # Node.js/npm setup is required on the runner
           curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
           echo "$HOME/.devcontainers/bin" >> "$GITHUB_PATH"
-          # Antigravity CLI is a native binary installed to ~/.local/bin/agy (not on npm)
-          curl -fsSL https://antigravity.google/cli/install.sh | bash
+
+      - name: Install DevPod CLI
+        if: matrix.cli == 'devpod'
+        run: |
+          # DevPod is a single static binary. Its built-in docker provider is
+          # registered here so that it targets the runner's Docker daemon; the
+          # provider is embedded in the binary, so this needs no extra download.
+          # Do not stage the download at /tmp/devpod: DevPod uses that path as a
+          # working directory and would then fail with "not a directory".
+          install -d -m 0755 "$HOME/.local/bin"
+          curl -fsSL -o "$HOME/.local/bin/devpod" \
+            "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-$(dpkg --print-architecture)"
+          chmod 0755 "$HOME/.local/bin/devpod"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/devpod" provider add docker
+          # Same reasoning as in the Dockerfile: keep DevPod from rewriting the
+          # ~/.gitconfig that is shared with the host through /dev_container_home
+          "$HOME/.local/bin/devpod" context set-options \
+            -o SSH_INJECT_GIT_CREDENTIALS=false \
+            -o GIT_SSH_SIGNATURE_FORWARDING=false
 
       - name: Prepare mock files for mounts and authentication
         run: |
@@ -41,9 +68,11 @@ jobs:
           ssh-agent -a /tmp/ssh-agent.sock > /dev/null
           echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
 
-      - name: Run test.sh
-        run: .devcontainer/test.sh
+      - name: Run test-${{ matrix.cli }}.sh
+        run: .devcontainer/test-${{ matrix.cli }}.sh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Set dummy keys to see if the tools at least try to connect
           ANTHROPIC_API_KEY: "dummy"
+          # Same as in the Dockerfile: CI has no reason to report usage
+          DEVPOD_DISABLE_TELEMETRY: "true"
