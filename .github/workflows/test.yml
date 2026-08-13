@@ -62,8 +62,12 @@ jobs:
 
       - name: Prepare environment
         run: |
-          # Ensure GH_TOKEN is set for initializeCommand
-          echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env
+          # .env.additional is the file devcontainer.json passes to --env-file,
+          # so this is what puts GH_TOKEN inside the container. allow_hosts.d/
+          # 00-github needs it: the unauthenticated api.github.com rate limit is
+          # per IP address and shared runners run into it, which would leave the
+          # firewall without GitHub's IP ranges.
+          echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env.additional
           # Mock SSH agent
           ssh-agent -a /tmp/ssh-agent.sock > /dev/null
           echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
