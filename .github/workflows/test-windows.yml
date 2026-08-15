@@ -1,0 +1,85 @@
+name: CI (Windows)
+
+on:
+  push:
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      # Keep LF line endings on checkout. Without this, Git's autocrlf converts
+      # the shell scripts to CRLF, which breaks the `#!/bin/sh` shebang
+      # ("required file not found", exit 127) when run under WSL/Linux.
+      - name: Disable Git autocrlf so scripts keep LF endings
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@v4
+
+      # The dev container is Linux-based (debian + docker-in-docker), which the
+      # native Windows Docker daemon cannot run. The only viable path on a
+      # Windows runner is to run the whole Linux Docker stack inside WSL2.
+      - name: Set up WSL2 with Ubuntu
+        uses: Vampire/setup-wsl@v7
+        with:
+          distribution: Ubuntu-24.04
+          wsl-version: '2'
+          set-as-default: 'true'
+          additional-packages: |
+            docker.io
+            curl
+            git
+            ca-certificates
+            iptables
+
+      - name: Install Node.js, devcontainer CLI and Antigravity CLI in WSL
+        shell: wsl-bash {0}
+        run: |
+          set -eux
+          # Install Node.js 24 (matches the Linux CI) via NodeSource
+          curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
+          apt-get install -y nodejs
+          npm install -g @devcontainers/cli
+          # Antigravity CLI is a native binary installed to ~/.local/bin/agy
+          curl -fsSL https://antigravity.google/cli/install.sh | bash
+
+      - name: Prepare mock files for mounts and authentication in WSL
+        shell: wsl-bash {0}
+        run: |
+          set -eux
+          mkdir -p ~/.claude ~/.gemini
+          # Create dummy credential files to simulate web authentication
+          echo '{"loggedIn": true, "dummy": true}' > ~/.claude/.credentials.json
+          echo '{}' > ~/.claude.json
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+
+      - name: Start the Docker daemon inside WSL
+        shell: wsl-bash {0}
+        run: |
+          set -eux
+          # WSL has no systemd by default; start dockerd via the SysV service,
+          # falling back to launching dockerd directly.
+          service docker start || (dockerd >/tmp/dockerd.log 2>&1 &)
+          for i in $(seq 1 30); do
+            if docker info >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+          docker info
+
+      - name: Run test.sh
+        shell: wsl-bash {0}
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          export GH_TOKEN='${{ secrets.GITHUB_TOKEN }}'
+          # Set a dummy key to see if the tools at least try to connect
+          export ANTHROPIC_API_KEY='dummy'
+          .devcontainer/test.sh
