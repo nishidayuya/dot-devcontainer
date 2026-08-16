@@ -71,6 +71,19 @@ jobs:
           # Mock SSH agent
           ssh-agent -a /tmp/ssh-agent.sock > /dev/null
           echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV
+          # devcontainer.json bind-mounts the Wayland socket of the host
+          # session, and the runner has no compositor. Bind a socket nothing
+          # listens on at the place the mount and
+          # initialize_command.d/20-wayland look for it: that is enough for
+          # them and for the checks in test-common.sh, which never draw
+          # anything.
+          xdg_runtime_dir="$RUNNER_TEMP/xdg_runtime_dir"
+          mkdir -p "$xdg_runtime_dir"
+          chmod 700 "$xdg_runtime_dir"
+          python3 -c 'import socket, sys; socket.socket(socket.AF_UNIX).bind(sys.argv[1])' \
+            "$xdg_runtime_dir/wayland-0"
+          echo "XDG_RUNTIME_DIR=$xdg_runtime_dir" >> $GITHUB_ENV
+          echo "WAYLAND_DISPLAY=wayland-0" >> $GITHUB_ENV
 
       - name: Run test-${{ matrix.cli }}.sh
         run: .devcontainer/test-${{ matrix.cli }}.sh

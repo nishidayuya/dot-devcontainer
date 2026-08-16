@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -eu
+
+# Claude Desktop is an Electron application: it reaches xdg-desktop-portal over
+# the session bus for its file dialogs and libnotify for its notifications.
+# Nothing starts a session bus here, because there is no systemd user session,
+# so start one.
+#
+# The socket goes to ${XDG_RUNTIME_DIR}/bus, the address D-Bus clients try when
+# DBUS_SESSION_BUS_ADDRESS is unset, which saves handing that variable to every
+# process that might want the bus.
+
+XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/xdg_runtime_dir}"
+socket_path="${XDG_RUNTIME_DIR}/bus"
+address="unix:path=${socket_path}"
+
+# A bus from an earlier start of the same container keeps working, so replace
+# the socket only when nothing answers on it.
+if [ -S "${socket_path}" ] &&
+  dbus-send --bus="${address}" --dest=org.freedesktop.DBus \
+    --print-reply /org/freedesktop/DBus org.freedesktop.DBus.GetId >/dev/null 2>&1
+then
+  echo "Session D-Bus daemon is already listening on ${address}."
+  exit 0
+fi
+
+rm -f "${socket_path}"
+dbus-daemon --session --address="${address}" --fork --print-address

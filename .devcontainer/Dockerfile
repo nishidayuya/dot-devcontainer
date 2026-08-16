@@ -33,6 +33,34 @@ RUN install -dm 755 /etc/apt/keyrings \
     && apt-get update \
     && apt-get install -y mise
 
+# Install Claude Desktop from Anthropic's apt repository
+# (https://code.claude.com/docs/en/desktop-linux). It is an Electron
+# application and draws on the host's Wayland compositor through the socket
+# that devcontainer.json bind-mounts.
+#
+# --no-install-recommends keeps qemu-system-x86, ovmf and virtiofsd out of the
+# image: they are only used by Cowork's virtual machine sandbox and would add
+# more than a gigabyte. The packages listed next to claude-desktop are chosen
+# by hand instead:
+#   - libglib2.0-bin satisfies the "kde-cli-tools | ... | libglib2.0-bin |
+#     gvfs" dependency with gio, so that apt does not pull in KDE for its first
+#     alternative.
+#   - libasound2t64 and libayatana-appindicator3-1 are recommendations worth
+#     keeping: sound playback and the tray icon.
+RUN curl -fsSLo /usr/share/keyrings/claude-desktop-archive-keyring.asc \
+      https://downloads.claude.ai/claude-desktop/key.asc \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/claude-desktop-archive-keyring.asc] https://downloads.claude.ai/claude-desktop/apt/stable stable main" \
+      > /etc/apt/sources.list.d/claude-desktop.list \
+    && apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    claude-desktop \
+    libglib2.0-bin \
+    libasound2t64 \
+    libayatana-appindicator3-1
+
+# Puts claude-desktop on Wayland; see the comments in the script itself
+COPY --chmod=0755 claude-desktop-wrapper.sh /usr/local/bin/claude-desktop
+
 USER vscode
 ENV MISE_DATA_DIR=/home/vscode/.local/share/mise
 ENV MISE_CONFIG_DIR=/home/vscode/.config/mise

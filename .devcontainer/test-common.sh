@@ -115,6 +115,28 @@ else
   claude --no-session-persistence --print "Hello, World!" || echo "Claude prompt failed as expected with dummy credentials"
 fi
 
+# Claude Desktop is a GUI application, so there is nothing to prompt here.
+# Check that the package is installed and that it gets far enough to print its
+# version: that already exercises the Chromium zygote, which is where an
+# Electron application in a container usually fails.
+dpkg-query -W -f='${Package} ${Version}\n' claude-desktop
+# The wrapper that puts it on Wayland has to be the one that PATH finds
+test "$(command -v claude-desktop)" = /usr/local/bin/claude-desktop
+claude-desktop --version
+
+# Everything Claude Desktop draws on has to be reachable from the container:
+# the Wayland socket bind-mounted from the host, and the session bus that
+# post_start_command.d/50-dbus-session starts.
+test -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"
+test "$(stat -c '%a' "$XDG_RUNTIME_DIR")" = 700
+test "$(stat -c '%u' "$XDG_RUNTIME_DIR")" = "$(id -u)"
+dbus-send --dest=org.freedesktop.DBus --print-reply \
+  /org/freedesktop/DBus org.freedesktop.DBus.GetId
+
+# The --shm-size in runArgs, without which Chromium renderers die on Docker's
+# 64 MB default
+test "$(df -m --output=size /dev/shm | tail -n 1)" -ge 1024
+
 # Check GitHub CLI connection
 gh version
 GH_TOKEN=dummy gh api https://github.com/nishidayuya/dot-devcontainer
