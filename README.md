@@ -9,6 +9,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 
 - **Tool Management:** Manage Node.js, Ruby, and other tools using `mise`.
 - **AI Integration:** Comes with `Antigravity CLI` (`agy`) pre-installed.
+- **GUI applications:** `Claude Desktop` is pre-installed and draws on the Wayland compositor of the host, whose socket is bind-mounted into the container.
 - **Nested dev containers:** Both the `Dev Container CLI` (`devcontainer`) and the `DevPod CLI` (`devpod`) are pre-installed, so a project's dev container can be built and started from inside this one.
 - **Security:** Outbound network traffic is restricted using `iptables` to only allow connections to specified hosts.
 - **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`.
@@ -25,6 +26,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
   - `devcontainer` (Dev Container CLI)
   - `devpod` (DevPod CLI, with the built-in `docker` provider)
   - `Antigravity CLI`
+  - `Claude Code` & `Claude Desktop`
   - `Chromium` & `Chromium Driver`
 
 ## Usage
@@ -91,6 +93,8 @@ it is resolved on the host.
    - `10-dev-container-home` creates symlinks in the container home directory (`/home/vscode`) for every entry directly under `/dev_container_home`. Entries with the same name in the home directory are replaced by the symlinks.
    - `20-known-hosts` adds GitHub's SSH host keys (fetched at startup via `ssh-keyscan`) to `~/.ssh/known_hosts`.
    - `30-claude-update` runs `claude update` to keep Claude Code on the latest version. Failures are ignored, so a network hiccup does not block startup.
+   - `40-xdg-runtime-dir` gives `XDG_RUNTIME_DIR` (`/run/xdg_runtime_dir`, where the Wayland socket of the host is mounted) the ownership and the `0700` mode it is required to have.
+   - `50-dbus-session` starts a session D-Bus daemon on `${XDG_RUNTIME_DIR}/bus`, which GUI applications need for `xdg-desktop-portal` file dialogs and for notifications.
 
 The scripts in `.devcontainer/initialize_command.d/` run the same way, but on the **host** and before the container is created.
 
@@ -137,6 +141,56 @@ Three DevPod defaults are changed for this template:
   workspace. Re-enable them with `devpod context set-options` if you need git
   credentials forwarded and can live with that.
 
+### Running Claude Desktop
+
+[Claude Desktop](https://code.claude.com/docs/en/desktop-linux) is installed
+from Anthropic's apt repository at image build time. Start it from a shell in
+the container:
+
+```sh
+claude-desktop
+```
+
+Its window opens on the desktop of the host, because `devcontainer.json`
+bind-mounts the Wayland socket of the host session:
+
+```text
+${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}   (host)
+  -> /run/xdg_runtime_dir/wayland-0     (container)
+```
+
+The container side is `/run/xdg_runtime_dir` and not something under `/tmp`,
+because the `docker-in-docker` feature mounts a tmpfs over `/tmp` while the
+container starts, which would hide the socket mounted underneath it.
+
+Both variables are read on the host, so they have to be visible to the process
+that starts the container, exactly like `DOT_DEVCONTAINER_HOME`. That is the
+case in a normal Wayland session; if the container is started from somewhere
+else, export them there.
+
+Nothing else of the host session is shared: the socket is mounted on its own,
+not the whole `XDG_RUNTIME_DIR`, so the D-Bus, PipeWire, ssh-agent and gnupg
+sockets that usually sit next to it stay outside the container.
+
+The `claude-desktop` that `PATH` finds is
+`.devcontainer/claude-desktop-wrapper.sh`, installed as
+`/usr/local/bin/claude-desktop`. It only adds `--ozone-platform=wayland` to the
+packaged `/usr/bin/claude-desktop`, which would otherwise look for an X server
+that does not exist here.
+
+`initialize_command.d/20-wayland` checks the socket on the host before the
+container is created, and stops with an explanation when it is missing.
+**Without a Wayland session on the host there is nothing to mount**, so on such
+a host (X11-only, or macOS) remove the mount that ends in
+`/run/xdg_runtime_dir/wayland-0` from `.devcontainer/devcontainer.json`. The
+rest of the container works without it.
+
+The desktop app does not update itself on Linux. New versions arrive with apt:
+
+```sh
+sudo apt-get update && sudo apt-get install --only-upgrade claude-desktop
+```
+
 ## Firewall Configuration
 
 By default, traffic to major services like GitHub, RubyGems, npm, Node.js, Google, and Microsoft is allowed.
@@ -160,6 +214,7 @@ To apply changes inside the container, run:
 - Visual Studio Code
 - [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
 - The container requires `NET_ADMIN` capability. It may not work in some restricted environments.
+- A Wayland session on the host, whose socket is mounted into the container so that Claude Desktop has somewhere to draw. See [Running Claude Desktop](#running-claude-desktop) for what to change when there is none.
 
 ## License
 
