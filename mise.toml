@@ -1,0 +1,8 @@
+[tools]
+# Dockerfile linter. Pinned so that a new hadolint release cannot turn a green
+# CI run red without a commit in this repository.
+hadolint = "2.15.1"
+
+[tasks.lint]
+description = "Lint the Dockerfile with hadolint"
+run = "hadolint .devcontainer/Dockerfile"

@@ -1,0 +1,9 @@
+# DL3008 (pin versions in apt-get install) is off: this image tracks Debian
+# stable and rebuilds regularly, so pinning every apt package would only pin it
+# to versions that get removed from the archive on the next point release.
+#
+# DL3066 (non-numeric user-id) is off: "vscode" is the user the devcontainers
+# base image creates and the one devcontainer.json expects by name.
+ignored:
+  - DL3008
+  - DL3066
