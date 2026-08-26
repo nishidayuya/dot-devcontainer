@@ -33,9 +33,13 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && rm -rf /var/lib/apt/lists/*
 
 # Install mise
-RUN install -dm 755 /etc/apt/keyrings \
+# The repository serves both amd64 and arm64, so the architecture is taken from
+# dpkg instead of being named: hard-coding amd64 leaves "apt-get install mise"
+# without a candidate on an arm64 host, such as an Apple Silicon Mac.
+RUN arch="$(dpkg --print-architecture)" \
+    && install -dm 755 /etc/apt/keyrings \
     && curl -fsSL https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=amd64] https://mise.jdx.dev/deb stable main" | tee /etc/apt/sources.list.d/mise.list \
+    && echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=${arch}] https://mise.jdx.dev/deb stable main" | tee /etc/apt/sources.list.d/mise.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends mise \
     && rm -rf /var/lib/apt/lists/*

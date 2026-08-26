@@ -22,13 +22,18 @@ jobs:
         run: mise run lint
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
-      # Report both CLIs even when one of them fails, instead of cancelling the
-      # other leg as soon as the first one breaks.
+      # Report every leg even when one of them fails, instead of cancelling the
+      # others as soon as the first one breaks.
       fail-fast: false
       matrix:
         cli: [devcontainer, devpod]
+        # Both architectures a developer machine is likely to have: x86_64 for
+        # PCs and servers, arm64 for an Apple Silicon Mac. Nothing in the image
+        # names an architecture anymore, and this is what keeps it that way.
+        # The arm64 runners are free for public repositories only.
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
     steps:
       - uses: actions/checkout@v4
 
