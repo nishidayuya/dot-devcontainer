@@ -1,5 +1,10 @@
 FROM mcr.microsoft.com/devcontainers/base:debian-13
 
+# Several RUN instructions below pipe a downloaded installer script or GPG key
+# into another command. The default "/bin/sh -c" only reports the exit status of
+# the last command of a pipeline, so a failed download would go unnoticed.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Install git, gh, Chromium, and other dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
@@ -24,14 +29,16 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     kmod \
     chromium \
     chromium-driver \
-    wget
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install mise
 RUN install -dm 755 /etc/apt/keyrings \
-    && wget -qO - https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg \
+    && curl -fsSL https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=amd64] https://mise.jdx.dev/deb stable main" | tee /etc/apt/sources.list.d/mise.list \
     && apt-get update \
-    && apt-get install -y mise
+    && apt-get install -y --no-install-recommends mise \
+    && rm -rf /var/lib/apt/lists/*
 
 USER vscode
 ENV MISE_DATA_DIR=/home/vscode/.local/share/mise
@@ -104,5 +111,8 @@ RUN mise use -g ruby@latest
 #     && mise use -g git@latest
 
 # Setup shell for mise
+# The single quotes are deliberate: mise has to be activated when the shell
+# starts, not when the image is built.
+# hadolint ignore=SC2016
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
     && echo 'eval "$(mise activate zsh)"' >> ~/.zshrc

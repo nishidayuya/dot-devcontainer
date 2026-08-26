@@ -7,6 +7,20 @@ on:
     branches: [ main ]
 
 jobs:
+  # Static checks that need no container build, so they report long before the
+  # matrix below finishes.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # mise.toml pins the hadolint version, so the linter is the same one a
+      # "mise run lint" in a checkout would use.
+      - uses: jdx/mise-action@v4
+
+      - name: Lint Dockerfile
+        run: mise run lint
+
   test:
     runs-on: ubuntu-latest
     strategy:
