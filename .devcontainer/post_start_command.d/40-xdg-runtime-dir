@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eu
+
+XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/xdg_runtime_dir}"
+
+# Docker creates the directories above a bind mount target as root, but
+# XDG_RUNTIME_DIR is specified to belong to the user and to be readable by
+# nobody else, and everything that puts a socket there expects that.
+sudo mkdir -p "${XDG_RUNTIME_DIR}"
+sudo chown "$(id -u):$(id -g)" "${XDG_RUNTIME_DIR}"
+sudo chmod 0700 "${XDG_RUNTIME_DIR}"
+
+echo "${XDG_RUNTIME_DIR} is ready."
+
+wayland_socket="${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY:-wayland-0}"
+
+# Only a warning: the container is perfectly usable without a display, it is
+# just Claude Desktop that will not come up.
+if [ -S "${wayland_socket}" ]; then
+  echo "Wayland socket of the host is available at ${wayland_socket}."
+else
+  echo "No Wayland socket at ${wayland_socket}. Claude Desktop will not start." >&2
+fi

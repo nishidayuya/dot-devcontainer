@@ -10,10 +10,36 @@
     }
   },
   "mounts": [
-    "source=${localEnv:DOT_DEVCONTAINER_HOME},target=/dev_container_home,type=bind,consistency=cached"
+    "source=${localEnv:DOT_DEVCONTAINER_HOME},target=/dev_container_home,type=bind,consistency=cached",
+    // Claude Desktop draws on the Wayland compositor running on the host
+    // through this socket. Its name there depends on the session (wayland-0,
+    // wayland-1, ...) and is normalized to wayland-0 in the container, which
+    // is what WAYLAND_DISPLAY below names. The defaults matter: without them
+    // an unset pair of variables would collapse the source into "/" and mount
+    // the whole host filesystem. With them the source is a path that simply
+    // does not exist, which initialize_command.d/20-wayland reports first.
+    "source=${localEnv:XDG_RUNTIME_DIR:/run/user/1000}/${localEnv:WAYLAND_DISPLAY:wayland-0},target=/run/xdg_runtime_dir/wayland-0,type=bind"
   ],
   "containerEnv": {
-    "DOT_DEVCONTAINER_HOME": "/dev_container_home"
+    "DOT_DEVCONTAINER_HOME": "/dev_container_home",
+    // The usual /run/user/<uid> does not exist here: nothing creates it
+    // without a systemd user session, and updateRemoteUserUID leaves the uid
+    // unknown at this point anyway, so a fixed path is used instead.
+    // post_start_command.d/40-xdg-runtime-dir gives it the ownership and the
+    // 0700 mode that XDG_RUNTIME_DIR is required to have.
+    //
+    // Not under /tmp: the docker-in-docker feature mounts a tmpfs over it
+    // while the container starts, which hides everything mounted underneath,
+    // the Wayland socket included.
+    "XDG_RUNTIME_DIR": "/run/xdg_runtime_dir",
+    // The name the socket above is mounted under, and what
+    // claude-desktop-wrapper.sh keys the Wayland backend off.
+    "WAYLAND_DISPLAY": "wayland-0"
+    // DBUS_SESSION_BUS_ADDRESS is deliberately absent, for two reasons: DevPod
+    // cuts a containerEnv value at its first "=", which would turn the address
+    // "unix:path=/run/xdg_runtime_dir/bus" into "unix:path", and D-Bus clients
+    // fall back to ${XDG_RUNTIME_DIR}/bus on their own, which is exactly where
+    // post_start_command.d/50-dbus-session puts the socket.
   },
   "capAdd": [
     "NET_ADMIN"
@@ -24,6 +50,11 @@
   // agent directory, where a relative path does not exist.
   "runArgs": [
     "--init",
+    // Chromium keeps its shared memory segments in /dev/shm, and Docker's 64 MB
+    // default there is small enough that renderer processes start dying under
+    // load. That hits Claude Desktop, which is an Electron application, as much
+    // as the Chromium installed in the image.
+    "--shm-size=1g",
     "--env-file",
     "${localWorkspaceFolder}/.devcontainer/.env.additional"
   ],
