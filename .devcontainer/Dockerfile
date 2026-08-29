@@ -135,24 +135,29 @@ RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
 # -f test rejects it, while zsh's (N) qualifier drops it. A missing directory is
 # not an error either.
 #
-# hadolint ignore=SC2016
-RUN printf '%s\n' \
-    '' \
-    '# Source every file in ~/.bashrc.d, in alphabetical order.' \
-    'if [ -d ~/.bashrc.d ]; then' \
-    '  for __rc in ~/.bashrc.d/*; do' \
-    '    [ -f "$__rc" ] && . "$__rc"' \
-    '  done' \
-    '  unset __rc' \
-    'fi' \
-    >> ~/.bashrc \
-    && printf '%s\n' \
-    '' \
-    '# Source every file in ~/.zshrc.d, in alphabetical order.' \
-    'if [ -d ~/.zshrc.d ]; then' \
-    '  for __rc in ~/.zshrc.d/*(N); do' \
-    '    [ -f "$__rc" ] && . "$__rc"' \
-    '  done' \
-    '  unset __rc' \
-    'fi' \
-    >> ~/.zshrc
+# The whole thing is one heredoc so that the two blocks read the way they end up
+# in the rc files. It needs BuildKit, which every builder this image is built
+# with uses: the classic "DOCKER_BUILDKIT=0" builder drops heredoc bodies.
+RUN <<'DOCKERFILE_RUN'
+cat >> ~/.bashrc <<'BASHRC'
+
+# Source every file in ~/.bashrc.d, in alphabetical order.
+if [ -d ~/.bashrc.d ]; then
+  for __rc in ~/.bashrc.d/*; do
+    [ -f "$__rc" ] && . "$__rc"
+  done
+  unset __rc
+fi
+BASHRC
+
+cat >> ~/.zshrc <<'ZSHRC'
+
+# Source every file in ~/.zshrc.d, in alphabetical order.
+if [ -d ~/.zshrc.d ]; then
+  for __rc in ~/.zshrc.d/*(N); do
+    [ -f "$__rc" ] && . "$__rc"
+  done
+  unset __rc
+fi
+ZSHRC
+DOCKERFILE_RUN
