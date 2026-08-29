@@ -21,6 +21,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 - **Key Tools:**
   - `mise`
   - `gh` (GitHub CLI)
+  - `glab` (GitLab CLI)
   - `docker-in-docker`
   - `devcontainer` (Dev Container CLI)
   - `devpod` (DevPod CLI, with the built-in `docker` provider)
@@ -139,7 +140,7 @@ Three DevPod defaults are changed for this template:
 
 ## Firewall Configuration
 
-By default, traffic to major services like GitHub, RubyGems, npm, Node.js, Google, and Microsoft is allowed.
+By default, traffic to major services like GitHub, GitLab, RubyGems, npm, Node.js, Google, and Microsoft is allowed.
 
 To add allowed hosts, create a new file in `.devcontainer/allow_hosts.d/` and list domain names or IP addresses (one per line).
 

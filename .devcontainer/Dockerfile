@@ -5,11 +5,12 @@ FROM mcr.microsoft.com/devcontainers/base:debian-13
 # the last command of a pipeline, so a failed download would go unnoticed.
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install git, gh, Chromium, and other dependencies
+# Install git, gh, glab, Chromium, and other dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
     git \
     gh \
+    glab \
     openssh-client \
     iptables \
     curl \

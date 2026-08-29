@@ -118,3 +118,11 @@ fi
 # Check GitHub CLI connection
 gh version
 GH_TOKEN=dummy gh api https://github.com/nishidayuya/dot-devcontainer
+
+# Check GitLab CLI connection
+glab version
+# The token is cleared here rather than set to a dummy value, unlike the gh
+# check above: GitLab answers a request carrying an invalid token with 401 even
+# for a public project, while an anonymous one succeeds. What this asserts is
+# that gitlab.com is reachable through the firewall, not that credentials work.
+GITLAB_TOKEN= glab api projects/gitlab-org%2Fgitlab
