@@ -121,3 +121,38 @@ RUN mise use -g ruby@latest
 # hadolint ignore=SC2016
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
     && echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
+
+# Load ~/.bashrc.d and ~/.zshrc.d
+# A drop-in directory keeps per-user or per-project shell settings out of the
+# rc file itself, so that they can be added by symlinking them in from
+# /dev_container_home (see post_start_command.d/10-dev-container-home) without
+# editing anything the image ships.
+#
+# The blocks are appended last, so that they run after the mise activation above
+# and can therefore override it. The glob expands in collation order, which is
+# how the files are sourced alphabetically, and it also expands to nothing
+# useful when the directory is empty: bash leaves the pattern as it is and the
+# -f test rejects it, while zsh's (N) qualifier drops it. A missing directory is
+# not an error either.
+#
+# hadolint ignore=SC2016
+RUN printf '%s\n' \
+    '' \
+    '# Source every file in ~/.bashrc.d, in alphabetical order.' \
+    'if [ -d ~/.bashrc.d ]; then' \
+    '  for __rc in ~/.bashrc.d/*; do' \
+    '    [ -f "$__rc" ] && . "$__rc"' \
+    '  done' \
+    '  unset __rc' \
+    'fi' \
+    >> ~/.bashrc \
+    && printf '%s\n' \
+    '' \
+    '# Source every file in ~/.zshrc.d, in alphabetical order.' \
+    'if [ -d ~/.zshrc.d ]; then' \
+    '  for __rc in ~/.zshrc.d/*(N); do' \
+    '    [ -f "$__rc" ] && . "$__rc"' \
+    '  done' \
+    '  unset __rc' \
+    'fi' \
+    >> ~/.zshrc
