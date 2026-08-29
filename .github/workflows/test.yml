@@ -32,8 +32,10 @@ jobs:
         # Both architectures a developer machine is likely to have: x86_64 for
         # PCs and servers, arm64 for an Apple Silicon Mac. Nothing in the image
         # names an architecture anymore, and this is what keeps it that way.
-        # The arm64 runners are free for public repositories only.
-        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        # The arm64 runners are free for public repositories only. Ubuntu 26.04
+        # is still a preview image, so this leg can be slower to be scheduled
+        # than the x86_64 one.
+        runner: [ubuntu-latest, ubuntu-26.04-arm]
     steps:
       - uses: actions/checkout@v4
 
