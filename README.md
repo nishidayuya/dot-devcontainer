@@ -12,7 +12,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 - **Nested dev containers:** Both the `Dev Container CLI` (`devcontainer`) and the `DevPod CLI` (`devpod`) are pre-installed, so a project's dev container can be built and started from inside this one.
 - **Security:** Outbound network traffic is restricted using `iptables` to only allow connections to specified hosts.
 - **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`.
-- **Shell drop-in directories:** `~/.bashrc` and `~/.zshrc` source every file in `~/.bashrc.d/` and `~/.zshrc.d/`, in alphabetical order.
+- **Shell drop-in directories:** `~/.bashrc` and `~/.zshrc` source every file in `~/.bashrc.local.d/` and `~/.zshrc.local.d/`, in alphabetical order.
 - **Independent home directory:** The directory pointed to by `DOT_DEVCONTAINER_HOME` on the host is mounted at `/dev_container_home`, and its entries are symlinked into the container home directory on start. Your real home directory is never mounted.
 
 ## Stack
@@ -108,9 +108,9 @@ means extensions such as `.sh` are silently skipped.
 ### Customizing the shell
 
 `~/.bashrc` and `~/.zshrc` end with a loop that sources every file in
-`~/.bashrc.d/` and `~/.zshrc.d/` respectively, in alphabetical order. Both
-directories are optional: a missing or empty one is simply skipped, and so is
-anything in them that is not a regular file.
+`~/.bashrc.local.d/` and `~/.zshrc.local.d/` respectively, in alphabetical
+order. Both directories are optional: a missing or empty one is simply skipped,
+and so is anything in them that is not a regular file.
 
 Because they are sourced last, they can override the `mise` activation that the
 image sets up. And because they live in the home directory, the usual way to
@@ -119,7 +119,7 @@ fill them is to put them in `DOT_DEVCONTAINER_HOME` and let
 
 ```text
 ~/dev_container_home/
-└── .bashrc.d/
+└── .bashrc.local.d/
     └── 50-aliases
 ```
 

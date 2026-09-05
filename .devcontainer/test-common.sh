@@ -6,15 +6,16 @@
 
 set -eux
 
-# The Dockerfile appends a loader for ~/.bashrc.d and ~/.zshrc.d to each rc
-# file. Check that an interactive shell sources the drop-ins in alphabetical
-# order, and that it still starts cleanly once the directory is gone.
+# The Dockerfile appends a loader for ~/.bashrc.local.d and ~/.zshrc.local.d
+# to each rc file. Check that an interactive shell sources the drop-ins in
+# alphabetical order, and that it still starts cleanly once the directory is
+# gone.
 #
 # Only the last line of the output is compared, because an interactive shell is
 # free to print a banner or a warning of its own before it gets to the echo.
 check_rc_d() {
   local shell="$1"
-  local dir="$HOME/.${shell}rc.d"
+  local dir="$HOME/.${shell}rc.local.d"
   local marker='echo "rc_d=[${dot_devcontainer_rc_d:-}]"'
 
   mkdir -p "$dir"
