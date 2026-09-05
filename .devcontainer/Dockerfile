@@ -122,7 +122,7 @@ RUN mise use -g ruby@latest
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
     && echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
 
-# Load ~/.bashrc.d and ~/.zshrc.d
+# Load ~/.bashrc.local.d and ~/.zshrc.local.d
 # A drop-in directory keeps per-user or per-project shell settings out of the
 # rc file itself, so that they can be added by symlinking them in from
 # /dev_container_home (see post_start_command.d/10-dev-container-home) without
@@ -141,9 +141,9 @@ RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc \
 RUN <<'DOCKERFILE_RUN'
 cat >> ~/.bashrc <<'BASHRC'
 
-# Source every file in ~/.bashrc.d, in alphabetical order.
-if [ -d ~/.bashrc.d ]; then
-  for __rc in ~/.bashrc.d/*; do
+# Source every file in ~/.bashrc.local.d, in alphabetical order.
+if [ -d ~/.bashrc.local.d ]; then
+  for __rc in ~/.bashrc.local.d/*; do
     [ -f "$__rc" ] && . "$__rc"
   done
   unset __rc
@@ -152,9 +152,9 @@ BASHRC
 
 cat >> ~/.zshrc <<'ZSHRC'
 
-# Source every file in ~/.zshrc.d, in alphabetical order.
-if [ -d ~/.zshrc.d ]; then
-  for __rc in ~/.zshrc.d/*(N); do
+# Source every file in ~/.zshrc.local.d, in alphabetical order.
+if [ -d ~/.zshrc.local.d ]; then
+  for __rc in ~/.zshrc.local.d/*(N); do
     [ -f "$__rc" ] && . "$__rc"
   done
   unset __rc
