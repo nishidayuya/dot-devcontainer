@@ -110,12 +110,23 @@ check_connectivity "https://api.anthropic.com/"
 # routes those through lo, which the firewall allows unconditionally.
 #
 # 172.31.255.0/30 sits in 172.16.0.0/12 and is small and high enough not to
-# collide with the Docker bridges. python3 comes from the base image.
+# collide with the Docker bridges.
+#
+# Completing the TCP handshake is all that is being asked, so the listener does
+# no more than accept and close. It is the mise-managed Ruby because that is
+# what the Dockerfile installs: the image carries no python3, and a listener
+# that never starts refuses the connection exactly the way the firewall would,
+# which would make this check pass for the wrong reason. Root runs the real
+# binary rather than the shim on PATH, which would send mise looking at root's
+# own configuration.
 check_local_network() {
   local netns=dot_devcontainer_test
   local address=172.31.255.2
   local port=18080
+  local ruby
   local i
+
+  ruby="$(mise which ruby)"
 
   sudo ip netns add "$netns"
   sudo ip link add dot-dc-host type veth peer name dot-dc-peer
@@ -125,18 +136,22 @@ check_local_network() {
   sudo ip -n "$netns" addr add "$address/30" dev dot-dc-peer
   sudo ip -n "$netns" link set dot-dc-peer up
 
-  sudo ip netns exec "$netns" \
-    python3 -m http.server "$port" --bind "$address" >/dev/null 2>&1 &
+  sudo ip netns exec "$netns" "$ruby" -rsocket -e \
+    'server = TCPServer.new(ARGV[0], Integer(ARGV[1])); loop { server.accept.close }' \
+    "$address" "$port" &
 
   # The rejection the firewall would answer with is immediate, so the retries
   # only cover the listener still starting up.
   for i in $(seq 30); do
-    if curl -sS --max-time 5 -o /dev/null "http://$address:$port/"; then
+    if ruby -rsocket -e 'TCPSocket.new(ARGV[0], Integer(ARGV[1])).close' \
+      "$address" "$port"
+    then
       break
     fi
     sleep 1
   done
-  test "$(curl -sS --max-time 5 -o /dev/null -w '%{http_code}' "http://$address:$port/")" = 200
+  ruby -rsocket -e 'TCPSocket.new(ARGV[0], Integer(ARGV[1])).close' \
+    "$address" "$port"
 
   # Deleting the namespace takes the veth pair with it, but only once the
   # listener holding it is gone.
