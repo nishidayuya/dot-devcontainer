@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -eu
+
+# The private IPv4 ranges of RFC 1918. Unlike an entry in allow_hosts.d, which
+# only gets ports 80 and 443, a network listed here is granted every port and
+# every protocol -- that is the point of the directory, because a local service
+# is just as likely to sit on 5432, 3000 or 11434 as on 443.
+#
+# 172.16.0.0/12 is the one that matters even when no LAN is involved: the
+# container's default gateway is the Docker bridge (172.17.0.1, the address
+# host.docker.internal resolves to), so this is what lets it reach a service
+# published on the host, and the bridge that docker-in-docker gives nested
+# containers falls in this range as well.
+#
+# 192.168.0.0/16 and 10.0.0.0/8 are the usual home and office LAN ranges, for a
+# database, a dev server or a model server running on another machine.
+#
+# The link-local range 169.254.0.0/16 is deliberately left out: it carries the
+# cloud metadata service (169.254.169.254), which hands instance credentials to
+# anything that asks it, and nothing worth reaching lives there.
+#
+# This does trade away part of what an allowlist buys: every host on the local
+# network becomes reachable on every port. Delete this file to keep the
+# container confined to the hosts in allow_hosts.d.
+cat <<EOF
+10.0.0.0/8
+172.16.0.0/12
+192.168.0.0/16
+EOF

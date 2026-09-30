@@ -11,7 +11,8 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 - **AI Integration:** Comes with `Antigravity CLI` (`agy`) pre-installed.
 - **Nested dev containers:** Both the `Dev Container CLI` (`devcontainer`) and the `DevPod CLI` (`devpod`) are pre-installed, so a project's dev container can be built and started from inside this one.
 - **Security:** Outbound network traffic is restricted using `iptables` to only allow connections to specified hosts.
-- **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`.
+- **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`, and allowed networks by adding files to `.devcontainer/allow_networks.d/`.
+- **Local network access:** The private ranges of RFC 1918 are reachable on every port, so a service running on the host or on another machine on the LAN can be used from inside the container.
 - **Shell drop-in directories:** `~/.bashrc` and `~/.zshrc` source every file in `~/.bashrc.local.d/` and `~/.zshrc.local.d/`, in alphabetical order.
 - **Independent home directory:** The directory pointed to by `DOT_DEVCONTAINER_HOME` on the host is mounted at `/dev_container_home`, and its entries are symlinked into the container home directory on start. Your real home directory is never mounted.
 
@@ -161,6 +162,8 @@ Three DevPod defaults are changed for this template:
 
 By default, traffic to major services like GitHub, GitLab, RubyGems, npm, Node.js, Google, and Microsoft is allowed.
 
+### Allowed hosts
+
 To add allowed hosts, create a new file in `.devcontainer/allow_hosts.d/` and list domain names or IP addresses (one per line).
 
 Example: `99-my-service`
@@ -168,6 +171,46 @@ Example: `99-my-service`
 api.example.com
 1.2.3.4
 ```
+
+Each of those entries is granted ports 80 and 443 only.
+
+### Allowed networks
+
+Whole networks are listed separately, in `.devcontainer/allow_networks.d/`, one
+IPv4 address or CIDR block per line. Unlike an `allow_hosts.d` entry, a network
+listed here is allowed on **every port and every protocol** — which is what
+reaching a local service takes, since it is as likely to sit on 5432, 3000 or
+11434 as on 443. Domain names are rejected: a network has to be a fixed range,
+not something resolved once at startup. Comments and blank lines are ignored.
+
+`00-private` ships with the private ranges of RFC 1918, so the local network is
+reachable out of the box:
+
+```text
+10.0.0.0/8
+172.16.0.0/12
+192.168.0.0/16
+```
+
+`172.16.0.0/12` matters even when no LAN is involved: the container's default
+gateway is the Docker bridge (`172.17.0.1`, the address `host.docker.internal`
+resolves to), so this is what lets it reach a service published on the host, and
+the bridge that `docker-in-docker` gives nested containers falls in the same
+range.
+
+The link-local range `169.254.0.0/16` is deliberately left out: it carries the
+cloud metadata service (`169.254.169.254`), which hands instance credentials to
+anything that asks it.
+
+This does trade away part of what an allowlist buys — every host on the local
+network becomes reachable on every port. Delete `00-private` to keep the
+container confined to the hosts in `allow_hosts.d`.
+
+Note that only outbound traffic is filtered at all: the `INPUT` chain is left
+open, so connecting **into** the container from the host has always worked and
+is unaffected by any of this.
+
+### Applying changes
 
 To apply changes inside the container, run:
 ```bash
