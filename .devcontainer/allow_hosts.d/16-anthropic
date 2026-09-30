@@ -3,6 +3,12 @@
 set -eu
 
 echo "api.anthropic.com"
-# Claude Code native installer download / background auto-update endpoints
+# Claude Code native installer download / background auto-update endpoints.
+# downloads.claude.ai also carries the apt repository Claude Desktop is
+# installed and updated from.
 echo "claude.ai"
 echo "downloads.claude.ai"
+# Claude Desktop shows the Claude web application, which is served from both
+# domains, with its static assets on assets.claude.ai
+echo "claude.com"
+echo "assets.claude.ai"

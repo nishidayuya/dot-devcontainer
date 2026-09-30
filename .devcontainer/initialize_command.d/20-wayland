@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -eu
+
+# devcontainer.json bind-mounts the Wayland socket of the host session so that
+# Claude Desktop can draw on it. Docker refuses to create the container when
+# that source path is missing, and says only that the path does not exist, so
+# check it here where the reason can be explained.
+
+socket="${XDG_RUNTIME_DIR:-/run/user/1000}/${WAYLAND_DISPLAY:-wayland-0}"
+
+if test -S "${socket}"
+then
+  echo "Wayland socket found at ${socket}."
+  exit 0
+fi
+
+echo "No Wayland socket at ${socket}." >&2
+echo "Claude Desktop needs the Wayland session of the host, so XDG_RUNTIME_DIR" >&2
+echo "and WAYLAND_DISPLAY have to be visible to the process that starts the" >&2
+echo "container, the same way DOT_DEVCONTAINER_HOME is." >&2
+echo "Without a Wayland session on the host, drop the mount that ends in" >&2
+echo "/run/xdg_runtime_dir/wayland-0 from .devcontainer/devcontainer.json." >&2
+exit 1
