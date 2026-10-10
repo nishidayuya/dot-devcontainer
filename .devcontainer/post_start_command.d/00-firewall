@@ -7,7 +7,8 @@ echo "Generating firewall rules..."
 # Use a temporary file for iptables-restore
 RULES_FILE=$(mktemp)
 TMP_ENTRIES=$(mktemp)
-trap 'rm -f "$RULES_FILE" "$TMP_ENTRIES"' EXIT
+TMP_NETWORKS=$(mktemp)
+trap 'rm -f "$RULES_FILE" "$TMP_ENTRIES" "$TMP_NETWORKS"' EXIT
 
 cat <<EOF > "$RULES_FILE"
 *filter
@@ -67,6 +68,33 @@ grep -vE '^[0-9.]+(\/[0-9]+)?$' "$TMP_ENTRIES" | while read -r domain; do
     fi
   done
 done
+
+# Process all entries from allow_networks.d
+#
+# These are whole networks rather than hosts, and they are granted every port
+# and every protocol instead of the 80/443 pair above. That is what reaching a
+# local service takes: a database on 5432, a dev server on 3000 or a model
+# server on 11434 would all stay out of reach otherwise. ICMP comes along with
+# it, so ping works within those networks too.
+run-parts .devcontainer/allow_networks.d/ > "$TMP_NETWORKS"
+
+# A typo here would silently cost a rule, and the "connection refused" that
+# follows looks like a firewall bug rather than a bad entry, so anything that is
+# not an IPv4 address or CIDR block stops the script. Domain names are rejected
+# on purpose: a network has to be a fixed range, not something resolved once at
+# startup. Comments and blank lines are skipped, so an entry can explain itself.
+awk '
+  /^[[:space:]]*(#|$)/ {
+    next
+  }
+  !/^([0-9]{1,3}\.){3}[0-9]{1,3}(\/[0-9]{1,2})?$/ {
+    printf("allow_networks.d: not an IPv4 address or CIDR block: %s\n", $0) > "/dev/stderr"
+    exit 1
+  }
+  {
+    printf("-A OUTPUT -d %s -j ACCEPT\n", $1)
+  }
+' "$TMP_NETWORKS" >> "$RULES_FILE"
 
 # Reject all other output immediately
 # Use tcp-reset for TCP to get immediate Connection Refused
