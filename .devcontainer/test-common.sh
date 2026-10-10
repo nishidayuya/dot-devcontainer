@@ -99,6 +99,68 @@ check_connectivity() {
 check_connectivity "https://antigravity.google/"
 check_connectivity "https://api.anthropic.com/"
 
+# The networks in .devcontainer/allow_networks.d are allowed on every port, not
+# just 80 and 443 the way an allow_hosts.d entry is. Check that a connection to
+# one of them really gets out, rather than only that the rules are listed.
+#
+# The destination is the far end of a veth pair in its own network namespace,
+# which is off-box as far as routing is concerned and therefore leaves through
+# the OUTPUT chain, exactly like a connection to the host or to another machine
+# on the LAN. One of this container's own addresses would prove nothing: Linux
+# routes those through lo, which the firewall allows unconditionally.
+#
+# 172.31.255.0/30 sits in 172.16.0.0/12 and is small and high enough not to
+# collide with the Docker bridges.
+#
+# Completing the TCP handshake is all that is being asked, so the listener does
+# no more than accept and close. It is the mise-managed Ruby because that is
+# what the Dockerfile installs: the image carries no python3, and a listener
+# that never starts refuses the connection exactly the way the firewall would,
+# which would make this check pass for the wrong reason. Root runs the real
+# binary rather than the shim on PATH, which would send mise looking at root's
+# own configuration.
+check_local_network() {
+  local netns=dot_devcontainer_test
+  local address=172.31.255.2
+  local port=18080
+  local ruby
+  local i
+
+  ruby="$(mise which ruby)"
+
+  sudo ip netns add "$netns"
+  sudo ip link add dot-dc-host type veth peer name dot-dc-peer
+  sudo ip link set dot-dc-peer netns "$netns"
+  sudo ip addr add 172.31.255.1/30 dev dot-dc-host
+  sudo ip link set dot-dc-host up
+  sudo ip -n "$netns" addr add "$address/30" dev dot-dc-peer
+  sudo ip -n "$netns" link set dot-dc-peer up
+
+  sudo ip netns exec "$netns" "$ruby" -rsocket -e \
+    'server = TCPServer.new(ARGV[0], Integer(ARGV[1])); loop { server.accept.close }' \
+    "$address" "$port" &
+
+  # The rejection the firewall would answer with is immediate, so the retries
+  # only cover the listener still starting up.
+  for i in $(seq 30); do
+    if ruby -rsocket -e 'TCPSocket.new(ARGV[0], Integer(ARGV[1])).close' \
+      "$address" "$port"
+    then
+      break
+    fi
+    sleep 1
+  done
+  ruby -rsocket -e 'TCPSocket.new(ARGV[0], Integer(ARGV[1])).close' \
+    "$address" "$port"
+
+  # Deleting the namespace takes the veth pair with it, but only once the
+  # listener holding it is gone.
+  sudo ip netns pids "$netns" | sudo xargs --no-run-if-empty kill
+  sudo ip netns delete "$netns"
+}
+
+check_local_network
+
 # Detect Antigravity connection
 # Antigravity CLI authenticates via browser-based Google sign-in and stores
 # its credentials under ~/.gemini. "agy models" requires a valid login, so we
