@@ -14,7 +14,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 - **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`, and allowed networks by adding files to `.devcontainer/allow_networks.d/`.
 - **Local network access:** The private ranges of RFC 1918 are reachable on every port, so a service running on the host or on another machine on the LAN can be used from inside the container.
 - **Shell drop-in directories:** `~/.bashrc` and `~/.zshrc` source every file in `~/.bashrc.local.d/` and `~/.zshrc.local.d/`, in alphabetical order.
-- **GPU access:** The host's GPUs are passed to the container when the host has any, and a host without a GPU starts the container as before.
+- **GPU access:** An NVIDIA GPU on the host can be passed to the container through `.devcontainer/.env.additional`, and a host without a GPU starts the container as before.
 - **Independent home directory:** The directory pointed to by `DOT_DEVCONTAINER_HOME` on the host is mounted at `/dev_container_home`, and its entries are symlinked into the container home directory on start. Your real home directory is never mounted.
 
 ## Stack
@@ -106,6 +106,36 @@ ships with Debian's `debianutils`, so relying on it would break the host-side
 To add your own step, drop an executable file into either directory. Names may
 only contain letters, digits, `_` and `-` — that is `run-parts`' own rule, and it
 means extensions such as `.sh` are silently skipped.
+
+### Using an NVIDIA GPU
+
+`devcontainer.json` cannot ask for a GPU only on the hosts that have one:
+`runArgs` with `--gpus all` makes the container fail to start on a host without
+a GPU, and DevPod ignores `hostRequirements.gpu`. So the GPU is requested per
+host instead, through the NVIDIA runtime and the environment variables in
+`.devcontainer/.env.additional`, which `runArgs` passes to `--env-file`.
+
+1. On the host, install the NVIDIA driver and the NVIDIA Container Toolkit, and
+   make the NVIDIA runtime Docker's default:
+
+   ```sh
+   sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
+   sudo systemctl restart docker
+   ```
+
+2. Add the following to `.devcontainer/.env.additional` on that host:
+
+   ```text
+   NVIDIA_VISIBLE_DEVICES=all
+   NVIDIA_DRIVER_CAPABILITIES=compute,utility
+   ```
+
+3. Rebuild the container, and check that `nvidia-smi` shows the GPU inside it.
+
+On a host without the NVIDIA runtime, the variables are just ordinary
+environment variables and do nothing. Note that the default runtime applies to
+every container on the host, so any other container that sets
+`NVIDIA_VISIBLE_DEVICES`, as the CUDA base images do, gets the GPUs as well.
 
 ### Customizing the shell
 
@@ -224,7 +254,7 @@ To apply changes inside the container, run:
 - Visual Studio Code
 - [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension
 - The container requires `NET_ADMIN` capability. It may not work in some restricted environments.
-- To use an NVIDIA GPU from inside the container, the host needs the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), with the Docker runtime configured by `nvidia-ctk runtime configure --runtime=docker`.
+- To use an NVIDIA GPU from inside the container, the host needs the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). See [Using an NVIDIA GPU](#using-an-nvidia-gpu).
 
 ## License
 
