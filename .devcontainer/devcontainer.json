@@ -24,6 +24,13 @@
   "capAdd": [
     "NET_ADMIN"
   ],
+  // "optional" passes the host's GPUs to the container when the host has any
+  // and is ignored otherwise, so the same configuration still starts on hosts
+  // without a GPU, such as the CI runners. The host needs the NVIDIA Container
+  // Toolkit for this to work.
+  "hostRequirements": {
+    "gpu": "optional"
+  },
   "initializeCommand": ".devcontainer/run-parts.sh .devcontainer/initialize_command.d",
   // The path has to be absolute: the Dev Container CLI resolves runArgs
   // relative to the workspace folder, but DevPod runs "docker run" from its own
