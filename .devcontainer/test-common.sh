@@ -161,6 +161,12 @@ check_local_network() {
 
 check_local_network
 
+# devcontainer.json maps host.docker.internal to the host-gateway, which Docker
+# Engine on Linux does not provide by itself. The name has to point at the
+# default gateway, the host's end of the bridge, for it to reach the host.
+test "$(getent ahostsv4 host.docker.internal | awk 'NR == 1 { print $1 }')" = \
+  "$(ip -4 route show default | awk '{ print $3 }')"
+
 # Detect Antigravity connection
 # Antigravity CLI authenticates via browser-based Google sign-in and stores
 # its credentials under ~/.gemini. "agy models" requires a valid login, so we
