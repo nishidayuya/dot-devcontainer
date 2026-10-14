@@ -15,7 +15,7 @@ trap 'rm -rf "${tmp_dir}"' EXIT
 # ref (e.g. tag "v1.0.0" becomes "dot-devcontainer-1.0.0"), so strip it off
 # instead of naming it. Picking the member with a wildcard is not portable:
 # GNU tar needs --wildcards, which macOS's bsdtar rejects outright.
-curl -f -sL --retry 3 --retry-all-errors "${TARBALL_URL}" | tar -xz --strip-components=1 -C "${tmp_dir}"
+curl -fsSL --retry 3 --retry-all-errors "${TARBALL_URL}" | tar -xz --strip-components=1 -C "${tmp_dir}"
 
 # Replace the existing .devcontainer directory only after the download
 # succeeded, so a network failure does not leave the project without one.
