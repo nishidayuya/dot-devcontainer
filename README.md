@@ -12,7 +12,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 - **Nested dev containers:** Both the `Dev Container CLI` (`devcontainer`) and the `DevPod CLI` (`devpod`) are pre-installed, so a project's dev container can be built and started from inside this one.
 - **Security:** Outbound network traffic is restricted using `iptables` to only allow connections to specified hosts.
 - **Extensibility:** Easily add allowed hosts by adding files to `.devcontainer/allow_hosts.d/`, and allowed networks by adding files to `.devcontainer/allow_networks.d/`.
-- **Local network access:** The private ranges of RFC 1918 are reachable on every port, so a service running on the host or on another machine on the LAN can be used from inside the container.
+- **Local network access:** The private ranges of RFC 1918 are reachable on every port, so a service running on the host or on another machine on the LAN can be used from inside the container. The host itself is reachable as `host.docker.internal`, on Linux as well as on Docker Desktop.
 - **Shell drop-in directories:** `~/.bashrc` and `~/.zshrc` source every file in `~/.bashrc.local.d/` and `~/.zshrc.local.d/`, in alphabetical order.
 - **GPU access:** An NVIDIA GPU on the host can be passed to the container through `.devcontainer/.env.additional`, and a host without a GPU starts the container as before.
 - **Independent home directory:** The directory pointed to by `DOT_DEVCONTAINER_HOME` on the host is mounted at `/dev_container_home`, and its entries are symlinked into the container home directory on start. Your real home directory is never mounted.
@@ -224,10 +224,26 @@ reachable out of the box:
 ```
 
 `172.16.0.0/12` matters even when no LAN is involved: the container's default
-gateway is the Docker bridge (`172.17.0.1`, the address `host.docker.internal`
-resolves to), so this is what lets it reach a service published on the host, and
-the bridge that `docker-in-docker` gives nested containers falls in the same
-range.
+gateway is the Docker bridge (usually `172.17.0.1`), so this is what lets it
+reach a service published on the host, and the bridge that `docker-in-docker`
+gives nested containers falls in the same range.
+
+### Reaching the host
+
+`devcontainer.json` passes `--add-host=host.docker.internal:host-gateway` to
+`docker run`, so `host.docker.internal` resolves to the host's address on the
+Docker bridge. Docker Desktop provides the name on its own, but Docker Engine on
+Linux does not without this. Since that address is in one of the private ranges
+above, every port on it is reachable through the firewall:
+
+```sh
+curl http://host.docker.internal:3000/
+```
+
+The service on the host has to listen on that address, though. One bound to
+`127.0.0.1` only, as many dev servers are by default, cannot be reached from the
+container; bind it to `0.0.0.0` or to the bridge address instead. A firewall on
+the host, such as `ufw`, may also need to let the bridge in.
 
 The link-local range `169.254.0.0/16` is deliberately left out: it carries the
 cloud metadata service (`169.254.169.254`), which hands instance credentials to

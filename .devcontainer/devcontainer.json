@@ -28,8 +28,15 @@
   // The path has to be absolute: the Dev Container CLI resolves runArgs
   // relative to the workspace folder, but DevPod runs "docker run" from its own
   // agent directory, where a relative path does not exist.
+  //
+  // Docker Desktop resolves host.docker.internal to the host on its own, but
+  // Docker Engine on Linux does not, so --add-host maps the name to the host's
+  // address on the container's bridge ("host-gateway"). That address falls in
+  // the private ranges of .devcontainer/allow_networks.d/00-private, so the
+  // firewall lets the container reach every port on it.
   "runArgs": [
     "--init",
+    "--add-host=host.docker.internal:host-gateway",
     "--env-file",
     "${localWorkspaceFolder}/.devcontainer/.env.additional"
   ],
