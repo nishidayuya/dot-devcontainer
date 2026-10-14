@@ -27,7 +27,7 @@ trap 'rm -f "${meta_json}"' EXIT
 
 # The unauthenticated rate limit is counted per IP address, which shared CI
 # runners do run into, so send a token whenever one is available.
-set -- --fail --silent --show-error --retry 3 --retry-all-errors \
+set -- --fail --silent --show-error --location --retry 3 --retry-all-errors \
   --header "Accept: application/vnd.github+json"
 github_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 if test -n "${github_token}"
