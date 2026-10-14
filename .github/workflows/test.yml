@@ -47,7 +47,7 @@ jobs:
         run: |
           # The standalone installer bundles its own Node.js runtime, so no
           # Node.js/npm setup is required on the runner
-          curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
+          curl -fsSL --retry 3 --retry-all-errors https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
           echo "$HOME/.devcontainers/bin" >> "$GITHUB_PATH"
 
       - name: Install DevPod CLI
@@ -59,7 +59,7 @@ jobs:
           # Do not stage the download at /tmp/devpod: DevPod uses that path as a
           # working directory and would then fail with "not a directory".
           install -d -m 0755 "$HOME/.local/bin"
-          curl -fsSL -o "$HOME/.local/bin/devpod" \
+          curl -fsSL --retry 3 --retry-all-errors -o "$HOME/.local/bin/devpod" \
             "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-$(dpkg --print-architecture)"
           chmod 0755 "$HOME/.local/bin/devpod"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"

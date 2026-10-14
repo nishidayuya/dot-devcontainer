@@ -10,6 +10,15 @@ generativelanguage.googleapis.com
 EOF
 
 # https://knowledge.workspace.google.com/admin/security/obtain-google-ip-address-ranges
-curl -s https://www.gstatic.com/ipranges/goog.json | \
-  jq -r '.prefixes[] | select(.ipv4Prefix != null) | .ipv4Prefix' | \
+#
+# Same reasoning as in 00-github: piping curl into another command reports only
+# the last command's status, which hides why the fetch failed. Fetch into a file
+# and let curl's own status stop the script.
+goog_json="$(mktemp)"
+trap 'rm -f "${goog_json}"' EXIT
+
+curl --fail --silent --show-error --location --retry 3 --retry-all-errors \
+  https://www.gstatic.com/ipranges/goog.json > "${goog_json}"
+
+jq -r '.prefixes[] | select(.ipv4Prefix != null) | .ipv4Prefix' < "${goog_json}" |
   grep -E '^([0-9]{1,3}\.){3}[0-9]{1,3}(/[0-9]{1,2})?$'

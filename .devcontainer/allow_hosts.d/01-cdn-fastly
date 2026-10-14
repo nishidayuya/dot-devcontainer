@@ -30,7 +30,7 @@ echo api.fastly.com
 ip_list_json="$(mktemp)"
 trap 'rm -f "${ip_list_json}"' EXIT
 
-curl --fail --silent --show-error --retry 3 --retry-all-errors \
+curl --fail --silent --show-error --location --retry 3 --retry-all-errors \
   https://api.fastly.com/public-ip-list > "${ip_list_json}"
 
 # IPv4 only, matching what 00-firewall turns into rules.
