@@ -39,7 +39,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 # without a candidate on an arm64 host, such as an Apple Silicon Mac.
 RUN arch="$(dpkg --print-architecture)" \
     && install -dm 755 /etc/apt/keyrings \
-    && curl -fsSL https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg \
+    && curl -fsSL --retry 3 --retry-all-errors https://mise.jdx.dev/gpg-key.pub | gpg --dearmor -o /etc/apt/keyrings/mise-archive-keyring.gpg \
     && echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.gpg arch=${arch}] https://mise.jdx.dev/deb stable main" | tee /etc/apt/sources.list.d/mise.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends mise \
@@ -58,7 +58,7 @@ ENV DEVPOD_DISABLE_TELEMETRY=true
 # Install tools
 # Dev Container CLI is installed with the standalone script, which bundles its
 # own Node.js runtime (https://github.com/devcontainers/cli#install-script)
-RUN curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
+RUN curl -fsSL --retry 3 --retry-all-errors https://raw.githubusercontent.com/devcontainers/cli/main/scripts/install.sh | sh
 # DevPod CLI runs the same devcontainer.json on a pluggable backend. It ships as
 # a single static binary (https://devpod.sh/docs/getting-started/install), and
 # the built-in "docker" provider is registered here so that it targets the local
@@ -81,7 +81,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/devcontainers/cli/main/scripts/
 # every later "mkdir /tmp/devpod" fail with "not a directory".
 RUN arch="$(dpkg --print-architecture)" \
     && install -d -m 0755 /home/vscode/.local/bin \
-    && curl -fsSL -o /home/vscode/.local/bin/devpod \
+    && curl -fsSL --retry 3 --retry-all-errors -o /home/vscode/.local/bin/devpod \
       "https://github.com/loft-sh/devpod/releases/latest/download/devpod-linux-${arch}" \
     && chmod 0755 /home/vscode/.local/bin/devpod \
     && devpod provider add docker \
@@ -90,9 +90,9 @@ RUN arch="$(dpkg --print-architecture)" \
       -o GIT_SSH_SIGNATURE_FORWARDING=false \
     && devpod ide use none
 # Install Claude Code via the native installer (https://code.claude.com/docs/ja/quickstart)
-RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN curl -fsSL --retry 3 --retry-all-errors https://claude.ai/install.sh | bash
 # Antigravity CLI is distributed as a native binary (installed to ~/.local/bin/agy), not via npm
-RUN curl -fsSL https://antigravity.google/cli/install.sh | bash
+RUN curl -fsSL --retry 3 --retry-all-errors https://antigravity.google/cli/install.sh | bash
 RUN mise use -g ruby@latest
 # Node.js is not required anymore: the Dev Container CLI standalone installer
 # bundles its own runtime. Uncomment if your project needs Node.js and npm.

@@ -87,7 +87,7 @@ devpod version
 check_connectivity() {
   local url=$1
   echo "Testing connectivity to $url..."
-  if curl -I -s --max-time 10 "$url" > /dev/null; then
+  if curl -I -s --max-time 10 --retry 3 --retry-all-errors "$url" > /dev/null; then
     echo "Connectivity to $url: OK"
   else
     local exit_code=$?

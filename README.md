@@ -38,7 +38,7 @@ A Dev Container configuration template pre-installed with `mise` and `Antigravit
 Run the following command in your project root to install the `.devcontainer` directory:
 
 ```sh
-curl -f -sL https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/install.sh | sh
+curl -f -sL --retry 3 --retry-all-errors https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/main/install.sh | sh
 ```
 
 To pin a specific version, set `DOT_DEVCONTAINER_REF` to a tag from the
@@ -48,7 +48,7 @@ stay in sync:
 
 ```sh
 DOT_DEVCONTAINER_REF=v4.0.0
-curl -f -sL "https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/$DOT_DEVCONTAINER_REF/install.sh" |
+curl -f -sL --retry 3 --retry-all-errors "https://raw.githubusercontent.com/nishidayuya/dot-devcontainer/$DOT_DEVCONTAINER_REF/install.sh" |
   DOT_DEVCONTAINER_REF="$DOT_DEVCONTAINER_REF" sh
 ```
 
@@ -58,7 +58,7 @@ SHA. It defaults to `main`.
 For [`git-cococo`](https://github.com/nishidayuya/git-cococo) junkies:
 
 ```sh
-DOT_DEVCONTAINER_REF="$(git ls-remote https://github.com/nishidayuya/dot-devcontainer.git refs/heads/main | awk '{print($1)}')" && git cococo sh -eux -c "curl -fsL https://github.com/nishidayuya/dot-devcontainer/raw/$DOT_DEVCONTAINER_REF/install.sh | DOT_DEVCONTAINER_REF=$DOT_DEVCONTAINER_REF sh"
+DOT_DEVCONTAINER_REF="$(git ls-remote https://github.com/nishidayuya/dot-devcontainer.git refs/heads/main | awk '{print($1)}')" && git cococo sh -eux -c "curl -fsL --retry 3 --retry-all-errors https://github.com/nishidayuya/dot-devcontainer/raw/$DOT_DEVCONTAINER_REF/install.sh | DOT_DEVCONTAINER_REF=$DOT_DEVCONTAINER_REF sh"
 ```
 
 ### Preparing `DOT_DEVCONTAINER_HOME`
