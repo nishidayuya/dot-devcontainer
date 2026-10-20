@@ -32,8 +32,8 @@
   // Docker Desktop resolves host.docker.internal to the host on its own, but
   // Docker Engine on Linux does not, so --add-host maps the name to the host's
   // address on the container's bridge ("host-gateway"). That address falls in
-  // the private ranges of .devcontainer/allow_networks.d/00-private, so the
-  // firewall lets the container reach every port on it.
+  // the private range of .devcontainer/allow_networks.d/50-private-classB, so
+  // the firewall lets the container reach every port on it.
   "runArgs": [
     "--init",
     "--add-host=host.docker.internal:host-gateway",

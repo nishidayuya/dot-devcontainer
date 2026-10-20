@@ -214,14 +214,14 @@ reaching a local service takes, since it is as likely to sit on 5432, 3000 or
 11434 as on 443. Domain names are rejected: a network has to be a fixed range,
 not something resolved once at startup. Comments and blank lines are ignored.
 
-`00-private` ships with the private ranges of RFC 1918, so the local network is
-reachable out of the box:
+The private ranges of RFC 1918 ship in three files, one range each, so the local
+network is reachable out of the box:
 
-```text
-10.0.0.0/8
-172.16.0.0/12
-192.168.0.0/16
-```
+| File                | Network          |
+| ------------------- | ---------------- |
+| `50-private-classA` | `10.0.0.0/8`     |
+| `50-private-classB` | `172.16.0.0/12`  |
+| `50-private-classC` | `192.168.0.0/16` |
 
 `172.16.0.0/12` matters even when no LAN is involved: the container's default
 gateway is the Docker bridge (usually `172.17.0.1`), so this is what lets it
@@ -250,8 +250,9 @@ cloud metadata service (`169.254.169.254`), which hands instance credentials to
 anything that asks it.
 
 This does trade away part of what an allowlist buys — every host on the local
-network becomes reachable on every port. Delete `00-private` to keep the
-container confined to the hosts in `allow_hosts.d`.
+network becomes reachable on every port. Delete one of the `50-private-*` files to
+close off that range, or all three to keep the container confined to the hosts
+in `allow_hosts.d`.
 
 Note that only outbound traffic is filtered at all: the `INPUT` chain is left
 open, so connecting **into** the container from the host has always worked and

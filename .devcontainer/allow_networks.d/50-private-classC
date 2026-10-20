@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -eu
+
+# The private IPv4 class C range of RFC 1918. Unlike an entry in allow_hosts.d,
+# which only gets ports 80 and 443, a network listed here is granted every port
+# and every protocol -- that is the point of the directory, because a local
+# service is just as likely to sit on 5432, 3000 or 11434 as on 443.
+#
+# 192.168.0.0/16 is the usual home LAN range, for a database, a dev server or a
+# model server running on another machine.
+#
+# This does trade away part of what an allowlist buys: every host in this range
+# becomes reachable on every port. Delete this file to keep the container from
+# reaching it.
+cat <<EOF
+192.168.0.0/16
+EOF
