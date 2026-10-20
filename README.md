@@ -221,8 +221,14 @@ reaching a local service takes, since it is as likely to sit on 5432, 3000 or
 11434 as on 443. Domain names are rejected: a network has to be a fixed range,
 not something resolved once at startup. Comments and blank lines are ignored.
 
-The private ranges of RFC 1918 ship in three files, one range each, so the local
-network is reachable out of the box:
+Like `allow_hosts.d/`, `.devcontainer/allow_networks.d/` ships empty and is
+ignored by git. `.devcontainer/allow_networks.d.example/` holds the private
+ranges of RFC 1918 in three files, one range each; copy the ones you need to
+make the local network reachable:
+
+```sh
+cp -p .devcontainer/allow_networks.d.example/* .devcontainer/allow_networks.d/
+```
 
 | File                | Network          |
 | ------------------- | ---------------- |
@@ -240,8 +246,9 @@ gives nested containers falls in the same range.
 `devcontainer.json` passes `--add-host=host.docker.internal:host-gateway` to
 `docker run`, so `host.docker.internal` resolves to the host's address on the
 Docker bridge. Docker Desktop provides the name on its own, but Docker Engine on
-Linux does not without this. Since that address is in one of the private ranges
-above, every port on it is reachable through the firewall:
+Linux does not without this. Since that address is in `172.16.0.0/12`, every
+port on it is reachable through the firewall once `50-private-classB` is in
+`allow_networks.d/`:
 
 ```sh
 curl http://host.docker.internal:3000/

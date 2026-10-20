@@ -89,9 +89,10 @@ jobs:
           # per IP address and shared runners run into it, which would leave the
           # firewall without GitHub's IP ranges.
           echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" > .devcontainer/.env.additional
-          # allow_hosts.d ships empty, so allow the example hosts the tests
-          # connect to
+          # allow_hosts.d and allow_networks.d ship empty, so allow the example
+          # hosts and networks the tests connect to
           cp -p .devcontainer/allow_hosts.d.example/* .devcontainer/allow_hosts.d/
+          cp -p .devcontainer/allow_networks.d.example/* .devcontainer/allow_networks.d/
           # Mock SSH agent
           ssh-agent -a /tmp/ssh-agent.sock > /dev/null
           echo "SSH_AUTH_SOCK=/tmp/ssh-agent.sock" >> $GITHUB_ENV

@@ -8,3 +8,6 @@
 # allow_hosts.d.example; only the placeholder that keeps the directory is tracked.
 /allow_hosts.d/*
 !/allow_hosts.d/.keep
+# The same goes for the allowed networks and allow_networks.d.example.
+/allow_networks.d/*
+!/allow_networks.d/.keep
