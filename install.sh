@@ -17,6 +17,13 @@ trap 'rm -rf "${tmp_dir}"' EXIT
 # GNU tar needs --wildcards, which macOS's bsdtar rejects outright.
 curl -fsSL --retry 3 --retry-all-errors "${TARBALL_URL}" | tar -xz --strip-components=1 -C "${tmp_dir}"
 
+# .env.additional is not shipped at all and holds this project's environment,
+# such as GH_TOKEN, so carry it over into the new tree. Copying rather than
+# moving leaves the old tree intact until the swap below.
+if [ -f .devcontainer/.env.additional ]; then
+  cp -p .devcontainer/.env.additional "${tmp_dir}/.devcontainer/.env.additional"
+fi
+
 # Replace the existing .devcontainer directory only after the download
 # succeeded, so a network failure does not leave the project without one.
 rm -rf .devcontainer
