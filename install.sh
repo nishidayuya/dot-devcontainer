@@ -23,6 +23,11 @@ curl -fsSL --retry 3 --retry-all-errors "${TARBALL_URL}" | tar -xz --strip-compo
 if [ -f .devcontainer/.env.additional ]; then
   cp -p .devcontainer/.env.additional "${tmp_dir}/.devcontainer/.env.additional"
 fi
+# allow_hosts.d ships empty and holds the hosts this project chose, so carry
+# them over the same way.
+if [ -d .devcontainer/allow_hosts.d ]; then
+  cp -Rp .devcontainer/allow_hosts.d/. "${tmp_dir}/.devcontainer/allow_hosts.d/"
+fi
 
 # Replace the existing .devcontainer directory only after the download
 # succeeded, so a network failure does not leave the project without one.

@@ -191,9 +191,16 @@ Three DevPod defaults are changed for this template:
 
 ## Firewall Configuration
 
-By default, traffic to major services like GitHub, GitLab, RubyGems, npm, Node.js, Google, and Microsoft is allowed.
-
 ### Allowed hosts
+
+`.devcontainer/allow_hosts.d/` ships empty and is ignored by git, so each
+workspace decides its own allowed hosts. `.devcontainer/allow_hosts.d.example/`
+holds ready-made files for major services like GitHub, GitLab, RubyGems, npm,
+Node.js, Google, and Microsoft; copy the ones you need:
+
+```sh
+cp -p .devcontainer/allow_hosts.d.example/* .devcontainer/allow_hosts.d/
+```
 
 To add allowed hosts, create a new file in `.devcontainer/allow_hosts.d/` and list domain names or IP addresses (one per line).
 

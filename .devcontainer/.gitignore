@@ -4,3 +4,7 @@
 # Dev Container CLI writes the feature lockfile.
 /.devpod-internal/
 /devcontainer-lock.json
+# Each workspace picks its own allowed hosts, starting from a copy of
+# allow_hosts.d.example; only the placeholder that keeps the directory is tracked.
+/allow_hosts.d/*
+!/allow_hosts.d/.keep
